@@ -31,9 +31,12 @@ This tool will allow you upload text data in a text file (or a number of text fi
 <b>Note:</b> If you have a large number of text files (more than 10MB in total), we suggest you compress (zip) them and upload the zip file instead. If you need assistance on how to compress your file, please check [the user guide](https://github.com/Sydney-Informatics-Hub/HASS-29_Quotation_Tool/blob/main/documents/jupyter-notebook-guide.pdf).  
 
 ## Calculate Document Similarity
-Once your texts have been uploaded, you can begin to calculate the similarity between documents in the corpus, show those similar document side-by-side, decide whether to 'keep' or 'remove' them and download the non-duplicated documents to your local computer.
+Once your texts have been uploaded, you can begin to calculate the similarity between documents in the corpus. You can then visualise the number of similar documents found by the tool in an histogram (as shown below).  
 
-<img width='500' src='./img/plot.png'/> 
+<img width='500' src='./img/plot.png'/>  
+
+You can also show those similar document side-by-side, decide whether to 'keep' or 'remove' them and download the non-duplicated documents to your local computer.  
+
 <img width='740' src='./img/output.png'/> 
 
 ## Reference
