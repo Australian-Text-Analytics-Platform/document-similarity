@@ -653,7 +653,7 @@ class DocumentSimilarity():
                 os.makedirs('./output/saved_files', exist_ok=True)
                 
                 for index, row in tqdm(self.deduplicated_text_df.iterrows(), 
-                                       total=len(self.deduplication_df)):
+                                       total=len(self.deduplicated_text_df)):
                     with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
                                                                       row.text_name), 'w') as f:
                         f.write(row.text)
