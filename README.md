@@ -15,7 +15,7 @@ This tool has been designed for use with minimal setup from users. You are able 
 If you are unable to access the tool via the first link above, then use the second link below. This is the free version of Binder, with less CPU and memory capacity (up to 2GB only).  
 
 2. This link is for people without Australian institutional affiliations  
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/semantic-tagger/main?labpath=semantic_tagger_en.ipynb)   
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/main?labpath=document_similarity.ipynb)    
 
 <b>Note:</b> this may take a few minutes to launch as Binder needs to install the dependencies for the tool.
 
