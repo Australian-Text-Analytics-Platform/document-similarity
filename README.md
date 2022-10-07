@@ -10,13 +10,12 @@ This tool has been designed for use with minimal setup from users. You are able 
 <b>Note:</b> Please try to use the first link to access the tool via BinderHub (up to 8GB memory). You can use either your AAF, Microsoft or Google credentials to login. 
 
 1. This link is for people with Australian Institute Affiliations (authentication required) 
-[![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/semantic-tagger/main?labpath=semantic_tagger_en.ipynb)    
+COMING SOON...  
 
 If you are unable to access the tool via the first link above, then use the second link below. This is the free version of Binder, with less CPU and memory capacity (up to 2GB only).  
 
 2. This link is for people without Australian institutional affiliations  
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/main?labpath=document_similarity.ipynb)    
-
+COMING SOON... 
 <b>Note:</b> this may take a few minutes to launch as Binder needs to install the dependencies for the tool.
 
 ## Load the data
@@ -34,6 +33,7 @@ This tool will allow you upload text data in a text file (or a number of text fi
 ## Calculate Document Similarity
 Once your texts have been uploaded, you can begin to calculate the similarity between documents in the corpus, show those similar document side-by-side, decide whether to 'keep' or 'remove' them and download the non-duplicated documents to your local computer.
 
+<img width='740' src='./img/plot.png'/> 
 <img width='740' src='./img/output.png'/> 
 
 ## Reference
