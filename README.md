@@ -33,7 +33,7 @@ This tool will allow you upload text data in a text file (or a number of text fi
 ## Calculate Document Similarity
 Once your texts have been uploaded, you can begin to calculate the similarity between documents in the corpus, show those similar document side-by-side, decide whether to 'keep' or 'remove' them and download the non-duplicated documents to your local computer.
 
-<img width='320' src='./img/plot.png'/> 
+<img width='500' src='./img/plot.png'/> 
 <img width='740' src='./img/output.png'/> 
 
 ## Reference
