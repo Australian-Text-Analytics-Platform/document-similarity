@@ -1,7 +1,5 @@
 # Document Similarity
 
-## Sydney Informatics Hub
-
 <b>Abstract:</b> in this notebook, you can use the DocumentSimilarity tool to identify similar documents in your corpus and decide whether to 'keep' or 'remove' them from the corpus.  
 
 ## Setup
