@@ -8,12 +8,12 @@ This tool has been designed for use with minimal setup from users. You are able 
 <b>Note:</b> Please try to use the first link to access the tool via BinderHub (up to 8GB memory). You can use either your AAF, Microsoft or Google credentials to login. 
 
 1. This link is for people with Australian Institute Affiliations (authentication required)  
-COMING SOON...  
+[![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/main?labpath=document_similarity.ipynb)    
 
 If you are unable to access the tool via the first link above, then use the second link below. This is the free version of Binder, with less CPU and memory capacity (up to 2GB only).  
 
 2. This link is for people without Australian institutional affiliations  
-COMING SOON...  
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/main?labpath=document_similarity.ipynb)  
 <b>Note:</b> this may take a few minutes to launch as Binder needs to install the dependencies for the tool.
 
 ## Load the data
