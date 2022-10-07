@@ -35,7 +35,7 @@ Once your texts have been uploaded, you can begin to calculate the similarity be
 
 <img width='500' src='./img/plot.png'/>  
 
-You can also show those similar document side-by-side, decide whether to 'keep' or 'remove' them and download the non-duplicated documents to your local computer.  
+You can also show pair of identified similar documents side-by-side, decide whether to 'keep' or 'remove' them and finally, download the non-duplicated documents to your local computer.  
 
 <img width='740' src='./img/output.png'/> 
 
