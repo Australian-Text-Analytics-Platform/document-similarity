@@ -369,16 +369,14 @@ class DocumentSimilarity():
             actual_jaccard: whether to calculate actual or estimated Jaccard similarity
         '''
         try:
-            tqdm.pandas()
-            
             # Step 1: calculate word counts
-            print('Step 1/9...')
+            tqdm.pandas(desc='Step 1/9',leave=False)
             self.text_df['word_count'] = self.text_df.progress_apply(
                 lambda x: self.count_text_words(x.text), 
                 axis=1)
             
             # Step 2: create text hash (to be used for estimating Jaccard similarity)
-            print('Step 2/9...')
+            tqdm.pandas(desc='Step 2/9',leave=False)
             self.text_df['hash'] = self.text_df.progress_apply(
                 lambda x: self.make_text_hash(x.text, 
                                               num_perm, 
@@ -386,15 +384,16 @@ class DocumentSimilarity():
                 axis=1)
             
             # Step 3 and 4: identify similar documents based on estimated Jaccard similarity
-            print('Step 3/9...')
             # Create LSH index
             lsh = MinHashLSH(threshold=similarity_cutoff, num_perm=num_perm)
             
             for index, row in tqdm(self.text_df.iterrows(), 
-                                   total=len(self.text_df)):
+                                   total=len(self.text_df),
+                                   desc='Step 3/9',leave=False):
                 lsh.insert(row['text_id'], row['hash'])
             
-            print('Step 4/9...')
+            #print('Step 4/9...')
+            tqdm.pandas(desc='Step 4/9',leave=False)
             self.text_df['matched_list'] = self.text_df.progress_apply(
                 lambda x: self.get_matches(lsh, 
                                            x.hash, 
@@ -402,7 +401,7 @@ class DocumentSimilarity():
                 axis=1)
             
             # Step 5: calculate actual or estimate Jaccard similarity
-            print('Step 5/9...')
+            tqdm.pandas(desc='Step 5/9',leave=False)
             self.text_df['jaccards'] = self.text_df.progress_apply(
                 lambda x: self.get_jaccards(
                     df=self.text_df, 
@@ -412,7 +411,7 @@ class DocumentSimilarity():
                     actual_jaccard=actual_jaccard), axis=1)
             
             # Step 6 & 7: collating list of similar documents
-            print('Step 6/9...')
+            tqdm.pandas(desc='Step 6/9',leave=False)
             intermediate_df = self.text_df[['matched_list', 
                                             'text_id', 
                                             'text_name',
@@ -420,7 +419,7 @@ class DocumentSimilarity():
             intermediate_df['listlen'] = intermediate_df.progress_apply(
                 lambda x: len(x.matched_list), axis = 1)
             
-            print('Step 7/9...')
+            tqdm.pandas(desc='Step 7/9',leave=False)
             intermediate_df = intermediate_df[intermediate_df.listlen > 0]
             intermediate_df['text_id_duped'] = intermediate_df.progress_apply(
                 lambda x: [x.text_id] * x.listlen, axis = 1)
@@ -448,11 +447,11 @@ class DocumentSimilarity():
                 how='left').drop('text_id', axis=1)
             
             # Step 8: removing duplication from list of similar documents
-            print('Step 8/9...')
             keep_index = {'index': [],
                           'text_pair': []}
             for index, row in tqdm(self.deduplication_df.iterrows(), 
-                                   total=len(self.deduplication_df)):
+                                   total=len(self.deduplication_df),
+                                   desc='Step 8/9',leave=False):
                 if set([row.text_id1,row.text_id2]) not in keep_index['text_pair']:
                     keep_index['index'].append(index)
                     keep_index['text_pair'].append(set([row.text_id1,row.text_id2]))
@@ -464,10 +463,11 @@ class DocumentSimilarity():
                 similarity_cutoff)
             
             # Step 9: recommendation to keep or remove and deduplciate documents
-            print('Step 9/9...')
+            #print('Step 9/9...')
             status1 = []; status2 = []
             for index, row in tqdm(self.deduplication_df.iterrows(), 
-                                   total=len(self.deduplication_df)):
+                                   total=len(self.deduplication_df),
+                                   desc='Step 9/9'):
                 if row.text_id1 in self.similar_doc_id:
                     status1.append('remove')
                 else:
@@ -489,7 +489,7 @@ class DocumentSimilarity():
             self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)]
         
         except:
-            print('No similar documents found. You can try using lower simiarity cutoff to find similar documents...')
+            print('No similar documents found. Please use lower simiarity cutoff to find similar documents...')
         
     
     def display_deduplication_list(self): 
