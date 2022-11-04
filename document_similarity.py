@@ -22,8 +22,16 @@ from datasketch import MinHash, MinHashLSH
 # pandas: tools for data processing
 import pandas as pd
 
-# seaborn: visualization tools
+# matplotlib & seaborn: visualization tools
+import matplotlib.pyplot as plt
 import seaborn as sns
+
+# Bokeh: interactive plots
+from bokeh.io import output_notebook
+from bokeh.models import ColorBar, LabelSet, ColumnDataSource
+from bokeh.plotting import figure, show
+from bokeh.transform import linear_cmap
+output_notebook()
 
 # html visualization
 from diffviz import html_diffs
@@ -349,8 +357,8 @@ class DocumentSimilarity():
         all_data = []; zip_files = []
         
         # deduplicate the text_df by text_id
-        if deduplication:
-            self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
+        #if deduplication:
+        #    self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
     
     
     def calculate_similarity(self, 
@@ -485,8 +493,11 @@ class DocumentSimilarity():
                             'text_id2', 'text_name2', 'word_count2', 'status2']
             self.deduplication_df = self.deduplication_df.reindex(columns=column_names)
             self.deduplication_df = self.deduplication_df.sort_values(by='similarity', ascending=False).reset_index(drop=True)
+            self.deduplication_df = self.deduplication_df[self.deduplication_df['similarity']>=similarity_cutoff]
             
             self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)]
+            
+            print('{} pair of similar documents found in the corpus.'.format(len(self.deduplication_df)))
         
         except:
             print('No similar documents found. Please use lower simiarity cutoff to find similar documents...')
@@ -861,7 +872,7 @@ class DocumentSimilarity():
         Args:
             df: the pandas DataFrame containing the similarity
         '''
-        # %% Visualise similarity scores
+        # visualise similarity scores
         title = "Similarity count accross the entire corpus"
     
         plot = sns.histplot(data=(df[
@@ -869,9 +880,89 @@ class DocumentSimilarity():
             # so one row per article for this plot    
             ~df[
             ['text_id1',"similarity"]]
-            .duplicated()]) , x="similarity").set_title(title)
+            .duplicated()]) , x="similarity") #.set_title(title)
+        
+        plot.set(xlabel='Jaccard similarity score',
+                 ylabel='No. of similar documents',
+                 title=title)
         
         return plot
+    
+    
+    def plot_heatmap_similarity(self,
+                                similarity_cutoff: float = 0.5,
+                                width: int = 900,
+                                height: int = 700,
+                                font_size: str = '10px',
+                                text_color: str = 'white'):
+        '''
+        Function to plot a histogram of similarity count
+        
+        Args:
+            df: the pandas DataFrame containing the similarity
+        '''
+        # visualise similarity scores
+        title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
+        
+        df = self.deduplication_df.loc[:,['text_id1','text_id2','similarity']]
+        #df['sim_str'] = df['similarity'].astype(str)
+        df['sim_str'] = df['similarity'].apply(lambda x: round(x,2)).astype(str)
+        
+        p = figure(title=title,
+                   x_range=list(set(df['text_id1'].to_list())),
+                   y_range=list(set(df['text_id2'].to_list())), 
+                   plot_width=width, plot_height=height)
+        
+        similarity_colours = linear_cmap("similarity", "Viridis256", 0, 1)
+        
+        p.rect(
+            x="text_id1",
+            y="text_id2",
+            width=1,
+            height=1,
+            fill_color=similarity_colours,
+            visible=True,
+            source=df,
+        )
+        p.xaxis.major_label_orientation = "vertical"
+        
+        source= ColumnDataSource(df)
+        labels = LabelSet(
+            x="text_id1",
+            y="text_id2",
+            text='sim_str',
+            level='glyph',
+            text_align='center',
+            text_color=text_color,
+            text_font_style='bold',
+            text_font_size = {'value': font_size},
+            y_offset=0,
+            source=source,
+            render_mode='canvas'
+        )
+        p.add_layout(labels)
+        
+        legend = ColorBar(color_mapper=similarity_colours["transform"])
+        p.add_layout(legend, "right")
+        
+        show(p)
+        
+        '''
+        df = df.pivot('text_id1','text_id2','similarity')
+    
+        # create a heatmap to show the correlation between features
+        sns.set(style='ticks', color_codes=True, font_scale=1.2)
+        plt.figure(figsize=(len(df)+10, len(df)))
+        sns.heatmap(df, 
+                    linewidths=0.1, 
+                    square=True, 
+                    linecolor='white', 
+                    annot=True, 
+                    cmap='summer', 
+                    fmt='.1f', 
+                    annot_kws={"fontsize":10})
+        plt.title(title)
+        plt.show()'''
     
     
     def get_duplicate_ids(self, 
