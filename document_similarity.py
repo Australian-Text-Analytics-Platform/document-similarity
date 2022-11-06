@@ -19,8 +19,9 @@ from itertools import chain
 # import tools to calculate Jaccard similarity
 from datasketch import MinHash, MinHashLSH
 
-# pandas: tools for data processing
+# pandas and numpy: tools for data processing
 import pandas as pd
+import numpy as np
 
 # matplotlib & seaborn: visualization tools
 import matplotlib.pyplot as plt
@@ -534,6 +535,33 @@ class DocumentSimilarity():
         else:
             if self.deduplication_df[item[0]][index] in self.similar_doc_id:
                 self.similar_doc_id.remove(self.deduplication_df[item[0]][index])
+                
+                
+    def save_to_csv(self, 
+                    df: pd.DataFrame,
+                    out_dir: str,
+                    file_name: str):
+        '''
+        Function to save tagged texts to csv file
+        
+        Args:
+            out_dir: the output file directory
+            file_name: the name of teh saved file
+        '''
+        # split into chunks
+        chunks = np.array_split(df.index, len(df)) 
+        
+        # save the tagged text into csv
+        for chunck, subset in enumerate(tqdm(chunks)):
+            if chunck == 0:
+                df.loc[subset].to_csv(out_dir+file_name, 
+                                      mode='w', 
+                                      index=True)
+            else:
+                df.loc[subset].to_csv(out_dir+file_name, 
+                                      header=None, 
+                                      mode='a', 
+                                      index=True)
         
         
     def display_deduplication_text(self):
@@ -585,6 +613,9 @@ class DocumentSimilarity():
                 select_action.options = act_options
                 select_action.value = default_action['{} & {}'.format(text_pair.status1,
                                                                       text_pair.status2)]
+            
+            with save_out:
+                clear_output()
         
         # link the display_button with the function
         display_button.on_click(on_display_button_clicked)
@@ -612,27 +643,61 @@ class DocumentSimilarity():
                 text_pair = self.deduplication_df[
                     self.deduplication_df.index == index.value].iloc[0,:].squeeze()
                 self.show_comparison(text_pair)
+            
+            with save_out:
+                clear_output()
                     
         # link the update_button with the function
         update_button.on_click(on_update_button_clicked)
+        
+        # widget to save table
+        save_button, save_out = self.click_button_widget(desc='Save table', 
+                                                       margin='0px 0px 0px 0px',
+                                                       width='150px')
+        
+        # function to define what happens when the display button is clicked
+        def on_save_button_clicked(_):
+            with save_out:
+                # create an output folder if not already exist
+                os.makedirs('output', exist_ok=True)
+                
+                clear_output()
+                out_dir = './output/'
+                file_name = 'deduplication_table.csv'
+                print('Saving in progress...')
+                self.save_to_csv(self.deduplication_df,
+                                 out_dir,
+                                 file_name)
+                
+                # download the saved file onto your computer
+                print('Table saved. Click below to download:')
+                display(DownloadFileLink(out_dir+file_name, file_name))
+                
+                
+        # link the display_button with the function
+        save_button.on_click(on_save_button_clicked)
         
         # displaying inputs, buttons and their outputs
         vbox1 = widgets.VBox([enter_index, 
                               index, 
                               display_button],
-                             layout = widgets.Layout(width='280px', height='130px'))
+                             layout = widgets.Layout(width='220px', height='130px'))
         
         vbox2 = widgets.VBox([enter_action, 
                               select_action, 
                               update_button],
-                             layout = widgets.Layout(width='280px', height='130px'))
-        hbox1 = widgets.HBox([vbox1, vbox2],
-                             layout = widgets.Layout(width='800px'))
+                             layout = widgets.Layout(width='220px', height='130px'))
         
-        vbox3 = widgets.HBox([display_out],
+        vbox3 = widgets.VBox([save_button, save_out],)
+                             #layout = widgets.Layout(width='1000px', height='250px'))
+        
+        hbox1 = widgets.HBox([vbox1, vbox2],
+                             layout = widgets.Layout(width='1000px'))
+        
+        vbox4 = widgets.HBox([display_out],
                              layout = widgets.Layout(height='300px'))
         
-        vbox = widgets.VBox([list_out, hbox1, update_out, vbox3])
+        vbox = widgets.VBox([list_out, hbox1, vbox3, update_out, vbox4])
         
         return vbox
     
