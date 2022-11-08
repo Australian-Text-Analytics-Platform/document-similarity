@@ -964,7 +964,11 @@ class DocumentSimilarity():
         Function to plot a histogram of similarity count
         
         Args:
-            df: the pandas DataFrame containing the similarity
+            similarity_cutoff: the Jaccard similarity cut-off for determining similar documents
+            width: the width of the heatmap
+            height: the height of the heatmap
+            font_size: the font size of the label texts
+            text_color: the font color of the label texts
         '''
         # visualise similarity scores
         title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
@@ -1009,27 +1013,16 @@ class DocumentSimilarity():
         
         legend = ColorBar(color_mapper=similarity_colours["transform"])
         p.add_layout(legend, "right")
+        p.xaxis.axis_label = 'text_id1'
+        p.yaxis.axis_label = 'text_id2'
+        p.xaxis.axis_label_text_font_size = '16px'
+        p.yaxis.axis_label_text_font_size = '16px'
+        p.xaxis.major_label_text_font_size = '14px'
+        p.yaxis.major_label_text_font_size = '14px'
         
         show(p)
         
-        '''
-        df = df.pivot('text_id1','text_id2','similarity')
-    
-        # create a heatmap to show the correlation between features
-        sns.set(style='ticks', color_codes=True, font_scale=1.2)
-        plt.figure(figsize=(len(df)+10, len(df)))
-        sns.heatmap(df, 
-                    linewidths=0.1, 
-                    square=True, 
-                    linecolor='white', 
-                    annot=True, 
-                    cmap='summer', 
-                    fmt='.1f', 
-                    annot_kws={"fontsize":10})
-        plt.title(title)
-        plt.show()'''
-    
-    
+        
     def get_duplicate_ids(self, 
                           df: pd.DataFrame, 
                           min_similarity: float) -> list:

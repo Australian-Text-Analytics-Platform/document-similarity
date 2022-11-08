@@ -36,11 +36,11 @@ Once your texts have been uploaded, you can begin to calculate the similarity be
 
 Alternatively, you can visualise the pair of similar documents and their Jaccard similarity on a heatmap (as shown below).  
 
-<img width='500' src='./img/heatmap_jaccard.png'/>  
+<img width='500' src='./img/heatmap.png'/>  
 
 You can also show pair of identified similar documents side-by-side, decide whether to 'keep' or 'remove' them and finally, download the non-duplicated documents to your local computer.  
 
-<img width='740' src='./img/output.png'/> 
+<img width='740' src='./img/deduplication_table.png'/> 
 
 ## Reference
 This tool uses [MinHash](https://ekzhu.com/datasketch/minhash.html) to estimate the Jaccard similarity between sets of documents. MinHash is introduced by Andrei Z. Broder in this [paper](https://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf).
