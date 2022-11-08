@@ -19,11 +19,20 @@ from itertools import chain
 # import tools to calculate Jaccard similarity
 from datasketch import MinHash, MinHashLSH
 
-# pandas: tools for data processing
+# pandas and numpy: tools for data processing
 import pandas as pd
+import numpy as np
 
-# seaborn: visualization tools
+# matplotlib & seaborn: visualization tools
+import matplotlib.pyplot as plt
 import seaborn as sns
+
+# Bokeh: interactive plots
+from bokeh.io import output_notebook
+from bokeh.models import ColorBar, LabelSet, ColumnDataSource
+from bokeh.plotting import figure, show
+from bokeh.transform import linear_cmap
+output_notebook()
 
 # html visualization
 from diffviz import html_diffs
@@ -349,8 +358,8 @@ class DocumentSimilarity():
         all_data = []; zip_files = []
         
         # deduplicate the text_df by text_id
-        if deduplication:
-            self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
+        #if deduplication:
+        #    self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
     
     
     def calculate_similarity(self, 
@@ -485,8 +494,11 @@ class DocumentSimilarity():
                             'text_id2', 'text_name2', 'word_count2', 'status2']
             self.deduplication_df = self.deduplication_df.reindex(columns=column_names)
             self.deduplication_df = self.deduplication_df.sort_values(by='similarity', ascending=False).reset_index(drop=True)
+            self.deduplication_df = self.deduplication_df[self.deduplication_df['similarity']>=similarity_cutoff]
             
             self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)]
+            
+            print('{} pair of similar documents found in the corpus.'.format(len(self.deduplication_df)))
         
         except:
             print('No similar documents found. Please use lower simiarity cutoff to find similar documents...')
@@ -523,6 +535,33 @@ class DocumentSimilarity():
         else:
             if self.deduplication_df[item[0]][index] in self.similar_doc_id:
                 self.similar_doc_id.remove(self.deduplication_df[item[0]][index])
+                
+                
+    def save_to_csv(self, 
+                    df: pd.DataFrame,
+                    out_dir: str,
+                    file_name: str):
+        '''
+        Function to save tagged texts to csv file
+        
+        Args:
+            out_dir: the output file directory
+            file_name: the name of teh saved file
+        '''
+        # split into chunks
+        chunks = np.array_split(df.index, len(df)) 
+        
+        # save the tagged text into csv
+        for chunck, subset in enumerate(tqdm(chunks)):
+            if chunck == 0:
+                df.loc[subset].to_csv(out_dir+file_name, 
+                                      mode='w', 
+                                      index=True)
+            else:
+                df.loc[subset].to_csv(out_dir+file_name, 
+                                      header=None, 
+                                      mode='a', 
+                                      index=True)
         
         
     def display_deduplication_text(self):
@@ -574,6 +613,9 @@ class DocumentSimilarity():
                 select_action.options = act_options
                 select_action.value = default_action['{} & {}'.format(text_pair.status1,
                                                                       text_pair.status2)]
+            
+            with save_out:
+                clear_output()
         
         # link the display_button with the function
         display_button.on_click(on_display_button_clicked)
@@ -601,27 +643,61 @@ class DocumentSimilarity():
                 text_pair = self.deduplication_df[
                     self.deduplication_df.index == index.value].iloc[0,:].squeeze()
                 self.show_comparison(text_pair)
+            
+            with save_out:
+                clear_output()
                     
         # link the update_button with the function
         update_button.on_click(on_update_button_clicked)
+        
+        # widget to save table
+        save_button, save_out = self.click_button_widget(desc='Save table', 
+                                                       margin='0px 0px 0px 0px',
+                                                       width='150px')
+        
+        # function to define what happens when the display button is clicked
+        def on_save_button_clicked(_):
+            with save_out:
+                # create an output folder if not already exist
+                os.makedirs('output', exist_ok=True)
+                
+                clear_output()
+                out_dir = './output/'
+                file_name = 'deduplication_table.csv'
+                print('Saving in progress...')
+                self.save_to_csv(self.deduplication_df,
+                                 out_dir,
+                                 file_name)
+                
+                # download the saved file onto your computer
+                print('Table saved. Click below to download:')
+                display(DownloadFileLink(out_dir+file_name, file_name))
+                
+                
+        # link the display_button with the function
+        save_button.on_click(on_save_button_clicked)
         
         # displaying inputs, buttons and their outputs
         vbox1 = widgets.VBox([enter_index, 
                               index, 
                               display_button],
-                             layout = widgets.Layout(width='280px', height='130px'))
+                             layout = widgets.Layout(width='220px', height='130px'))
         
         vbox2 = widgets.VBox([enter_action, 
                               select_action, 
                               update_button],
-                             layout = widgets.Layout(width='280px', height='130px'))
-        hbox1 = widgets.HBox([vbox1, vbox2],
-                             layout = widgets.Layout(width='800px'))
+                             layout = widgets.Layout(width='220px', height='130px'))
         
-        vbox3 = widgets.HBox([display_out],
+        vbox3 = widgets.VBox([save_button, save_out],)
+                             #layout = widgets.Layout(width='1000px', height='250px'))
+        
+        hbox1 = widgets.HBox([vbox1, vbox2],
+                             layout = widgets.Layout(width='1000px'))
+        
+        vbox4 = widgets.HBox([display_out],
                              layout = widgets.Layout(height='300px'))
         
-        vbox = widgets.VBox([list_out, hbox1, update_out, vbox3])
+        vbox = widgets.VBox([list_out, hbox1, vbox3, update_out, vbox4])
         
         return vbox
     
@@ -861,7 +937,7 @@ class DocumentSimilarity():
         Args:
             df: the pandas DataFrame containing the similarity
         '''
-        # %% Visualise similarity scores
+        # visualise similarity scores
         title = "Similarity count accross the entire corpus"
     
         plot = sns.histplot(data=(df[
@@ -869,11 +945,84 @@ class DocumentSimilarity():
             # so one row per article for this plot    
             ~df[
             ['text_id1',"similarity"]]
-            .duplicated()]) , x="similarity").set_title(title)
+            .duplicated()]) , x="similarity") #.set_title(title)
+        
+        plot.set(xlabel='Jaccard similarity score',
+                 ylabel='No. of similar documents',
+                 title=title)
         
         return plot
     
     
+    def plot_heatmap_similarity(self,
+                                similarity_cutoff: float = 0.5,
+                                width: int = 900,
+                                height: int = 700,
+                                font_size: str = '10px',
+                                text_color: str = 'white'):
+        '''
+        Function to plot a histogram of similarity count
+        
+        Args:
+            similarity_cutoff: the Jaccard similarity cut-off for determining similar documents
+            width: the width of the heatmap
+            height: the height of the heatmap
+            font_size: the font size of the label texts
+            text_color: the font color of the label texts
+        '''
+        # visualise similarity scores
+        title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
+        
+        df = self.deduplication_df.loc[:,['text_id1','text_id2','similarity']]
+        #df['sim_str'] = df['similarity'].astype(str)
+        df['sim_str'] = df['similarity'].apply(lambda x: round(x,2)).astype(str)
+        
+        p = figure(title=title,
+                   x_range=list(set(df['text_id1'].to_list())),
+                   y_range=list(set(df['text_id2'].to_list())), 
+                   plot_width=width, plot_height=height)
+        
+        similarity_colours = linear_cmap("similarity", "Viridis256", 0, 1)
+        
+        p.rect(
+            x="text_id1",
+            y="text_id2",
+            width=1,
+            height=1,
+            fill_color=similarity_colours,
+            visible=True,
+            source=df,
+        )
+        p.xaxis.major_label_orientation = "vertical"
+        
+        source= ColumnDataSource(df)
+        labels = LabelSet(
+            x="text_id1",
+            y="text_id2",
+            text='sim_str',
+            level='glyph',
+            text_align='center',
+            text_color=text_color,
+            text_font_style='bold',
+            text_font_size = {'value': font_size},
+            y_offset=0,
+            source=source,
+            render_mode='canvas'
+        )
+        p.add_layout(labels)
+        
+        legend = ColorBar(color_mapper=similarity_colours["transform"])
+        p.add_layout(legend, "right")
+        p.xaxis.axis_label = 'text_id1'
+        p.yaxis.axis_label = 'text_id2'
+        p.xaxis.axis_label_text_font_size = '16px'
+        p.yaxis.axis_label_text_font_size = '16px'
+        p.xaxis.major_label_text_font_size = '14px'
+        p.yaxis.major_label_text_font_size = '14px'
+        
+        show(p)
+        
+        
     def get_duplicate_ids(self, 
                           df: pd.DataFrame, 
                           min_similarity: float) -> list:
