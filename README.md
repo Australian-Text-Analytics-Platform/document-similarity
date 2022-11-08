@@ -36,7 +36,7 @@ Once your texts have been uploaded, you can begin to calculate the similarity be
 
 Alternatively, you can visualise the pair of similar documents and their Jaccard similarity on a heatmap (as shown below).  
 
-<img width='740' src='./img/heatmap.png'/>  
+<img width='600' src='./img/heatmap.png'/>  
 
 You can also show pair of identified similar documents side-by-side, decide whether to 'keep' or 'remove' them and finally, download the non-duplicated documents to your local computer.  
 
