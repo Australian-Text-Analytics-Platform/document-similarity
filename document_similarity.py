@@ -973,20 +973,20 @@ class DocumentSimilarity():
         # visualise similarity scores
         title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
         
-        df = self.deduplication_df.loc[:,['text_id1','text_id2','similarity']]
+        df = self.deduplication_df.loc[:,['text_name1','text_name2','similarity']]
         #df['sim_str'] = df['similarity'].astype(str)
         df['sim_str'] = df['similarity'].apply(lambda x: round(x,2)).astype(str)
         
         p = figure(title=title,
-                   x_range=list(set(df['text_id1'].to_list())),
-                   y_range=list(set(df['text_id2'].to_list())), 
+                   x_range=list(set(df['text_name1'].to_list())),
+                   y_range=list(set(df['text_name2'].to_list())), 
                    plot_width=width, plot_height=height)
         
-        similarity_colours = linear_cmap("similarity", "Viridis256", 0, 1)
+        similarity_colours = linear_cmap("similarity", "Viridis256", 1, 0)
         
         p.rect(
-            x="text_id1",
-            y="text_id2",
+            x="text_name1",
+            y="text_name2",
             width=1,
             height=1,
             fill_color=similarity_colours,
@@ -997,8 +997,8 @@ class DocumentSimilarity():
         
         source= ColumnDataSource(df)
         labels = LabelSet(
-            x="text_id1",
-            y="text_id2",
+            x="text_name1",
+            y="text_name2",
             text='sim_str',
             level='glyph',
             text_align='center',
@@ -1013,8 +1013,8 @@ class DocumentSimilarity():
         
         legend = ColorBar(color_mapper=similarity_colours["transform"])
         p.add_layout(legend, "right")
-        p.xaxis.axis_label = 'text_id1'
-        p.yaxis.axis_label = 'text_id2'
+        p.xaxis.axis_label = 'text_name1'
+        p.yaxis.axis_label = 'text_name2'
         p.xaxis.axis_label_text_font_size = '16px'
         p.yaxis.axis_label_text_font_size = '16px'
         p.xaxis.major_label_text_font_size = '14px'
