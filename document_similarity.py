@@ -782,7 +782,7 @@ class DocumentSimilarity():
         
         # widget to save non-duplicated texts
         save_dup_button, save_dup_out = self.click_button_widget(desc='Save duplicated texts', 
-                                                       margin='20px 0px 10px 0px',
+                                                       margin='5px 0px 10px 0px',
                                                        width='200px')
             
         # function to define what happens when the save button is clicked
