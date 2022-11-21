@@ -15,6 +15,7 @@ from tqdm import tqdm
 from zipfile import ZipFile
 from pathlib import Path
 from itertools import chain
+import re
 
 # import tools to calculate Jaccard similarity
 from datasketch import MinHash, MinHashLSH
@@ -29,7 +30,7 @@ import seaborn as sns
 
 # Bokeh: interactive plots
 from bokeh.io import output_notebook
-from bokeh.models import ColorBar, LabelSet, ColumnDataSource
+from bokeh.models import ColorBar, LabelSet, ColumnDataSource, HoverTool
 from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
 output_notebook()
@@ -89,6 +90,7 @@ class DocumentSimilarity():
         '''
         # initiate other necessary variables
         self.large_file_size = 1000000
+        self.exclude_punc = False
         
         # create an output folder if not already exist
         os.makedirs('output', exist_ok=True)
@@ -376,8 +378,27 @@ class DocumentSimilarity():
             num_perm: the number of permutation functions for estimating Jaccard similarity
             similarity_cutoff: the Jaccard similarity cut-off for determining similar documents
             actual_jaccard: whether to calculate actual or estimated Jaccard similarity
+            remove_punc: whether to remove punctuation from the text
         '''
         try:
+            def clean_text(text):
+                '''
+                Function to clean the text
+
+                Args:
+                    text: the text to be cleaned
+                '''
+                # remove punctuation
+                text = re.sub(r'[^\w\s]', ' ', text) 
+                
+                return text
+            
+            if self.exclude_punc:
+                self.text_df['text_with_punc'] = self.text_df['text']
+                print('Pre-processing uploaded text...')
+                tqdm.pandas()
+                self.text_df['text'] = self.text_df['text'].progress_apply(clean_text)
+            
             # Step 1: calculate word counts
             tqdm.pandas(desc='Step 1/9',leave=False)
             self.text_df['word_count'] = self.text_df.progress_apply(
@@ -713,13 +734,16 @@ class DocumentSimilarity():
         deduplicated_out = widgets.Output()
         
         with deduplicated_out:
-            self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)]
+            self.duplicated_text_df = self.text_df[self.text_df.text_id.isin(self.similar_doc_id)].copy()
+            self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)].copy()
+            self.deduplicated_text_df.drop(['text'], axis=1, inplace=True)
+            self.deduplicated_text_df.rename(columns={'text_with_punc': 'text'}, inplace=True)
             display(self.deduplicated_text_df.iloc[:,0:4].head(n))
             
         # widget to save non-duplicated texts
-        save_button, save_out = self.click_button_widget(desc='Save texts', 
+        save_button, save_out = self.click_button_widget(desc='Save non-duplicated texts', 
                                                        margin='20px 0px 10px 0px',
-                                                       width='150px')
+                                                       width='200px')
             
         # function to define what happens when the save button is clicked
         def on_save_button_clicked(_):
@@ -756,8 +780,48 @@ class DocumentSimilarity():
         # link the save_button with the function
         save_button.on_click(on_save_button_clicked)
         
+        # widget to save non-duplicated texts
+        save_dup_button, save_dup_out = self.click_button_widget(desc='Save duplicated texts', 
+                                                       margin='20px 0px 10px 0px',
+                                                       width='200px')
+            
+        # function to define what happens when the save button is clicked
+        def on_save_dup_button_clicked(_):
+            with save_dup_out:
+                clear_output()
+                # create an output folder if not already exist
+                os.makedirs('./output/saved_files', exist_ok=True)
+                
+                for index, row in tqdm(self.duplicated_text_df.iterrows(), 
+                                       total=len(self.duplicated_text_df)):
+                    with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
+                                                                      row.text_name), 'w') as f:
+                        f.write(row.text)
+                    
+                def zipdir(path, ziph):
+                    # ziph is zipfile handle
+                    for root, dirs, files in os.walk(path):
+                        for file in files:
+                            ziph.write(os.path.join(root, file), 
+                                       os.path.relpath(os.path.join(root, file), 
+                                                       os.path.join(path, '..')))
+
+                with zipfile.ZipFile('./output/duplicated_texts.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    zipdir('./output/saved_files/', zipf)
+                
+                # remove files and directory once finished
+                os.system('rm -r ./output/saved_files')
+                print('Duplicated texts saved. Click below to download:')
+                
+                # download the zip file onto your computer
+                file_name = './output/duplicated_texts.zip'
+                display(DownloadFileLink(file_name, file_name[9:]))
+        
+        # link the save_button with the function
+        save_dup_button.on_click(on_save_dup_button_clicked)
+        
         # displaying inputs, buttons and their outputs
-        vbox = widgets.VBox([deduplicated_out, save_button, save_out])
+        vbox = widgets.VBox([deduplicated_out, save_button, save_out, save_dup_button, save_dup_out])
         
         return vbox
     
@@ -772,8 +836,12 @@ class DocumentSimilarity():
         # obtain text and metadata
         title1 = f'Text: {text_pair.text_name1}'
         title2 = f'Text: {text_pair.text_name2}'
-        text1 = self.text_df[self.text_df['text_id']==text_pair.text_id1].text.to_list()[0]
-        text2 = self.text_df[self.text_df['text_id']==text_pair.text_id2].text.to_list()[0]
+        if self.exclude_punc:
+            text1 = self.text_df[self.text_df['text_id']==text_pair.text_id1].text_with_punc.to_list()[0]
+            text2 = self.text_df[self.text_df['text_id']==text_pair.text_id2].text_with_punc.to_list()[0]
+        else:
+            text1 = self.text_df[self.text_df['text_id']==text_pair.text_id1].text.to_list()[0]
+            text2 = self.text_df[self.text_df['text_id']==text_pair.text_id2].text.to_list()[0]
         
         metadata1 = f'text_id: {text_pair.text_id1}; word_count: {text_pair.word_count1}; Jaccard similarity: {text_pair.similarity}; status: {text_pair.status1}'
         metadata2 = f'text_id: {text_pair.text_id2}; word_count: {text_pair.word_count2}; Jaccard similarity: {text_pair.similarity}; status: {text_pair.status2}'
@@ -973,20 +1041,26 @@ class DocumentSimilarity():
         # visualise similarity scores
         title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
         
-        df = self.deduplication_df.loc[:,['text_name1','text_name2','similarity']]
-        #df['sim_str'] = df['similarity'].astype(str)
+        df = self.deduplication_df.loc[:,['text_id1','text_id2','text_name1','text_name2','similarity']]
         df['sim_str'] = df['similarity'].apply(lambda x: round(x,2)).astype(str)
         
+        tooltips = [
+            ('text_name1', '@text_name1'),
+            ('text_name2', '@text_name2'),
+            ('similarity', '@sim_str'),
+        ]
+        
         p = figure(title=title,
-                   x_range=list(set(df['text_name1'].to_list())),
-                   y_range=list(set(df['text_name2'].to_list())), 
+                   x_range=list(set(df['text_id1'].to_list())),
+                   y_range=list(set(df['text_id2'].to_list())), 
+                   tooltips=tooltips,
                    plot_width=width, plot_height=height)
         
         similarity_colours = linear_cmap("similarity", "Viridis256", 1, 0)
         
         p.rect(
-            x="text_name1",
-            y="text_name2",
+            x="text_id1",
+            y="text_id2",
             width=1,
             height=1,
             fill_color=similarity_colours,
@@ -997,8 +1071,8 @@ class DocumentSimilarity():
         
         source= ColumnDataSource(df)
         labels = LabelSet(
-            x="text_name1",
-            y="text_name2",
+            x="text_id1",
+            y="text_id2",
             text='sim_str',
             level='glyph',
             text_align='center',
@@ -1013,8 +1087,8 @@ class DocumentSimilarity():
         
         legend = ColorBar(color_mapper=similarity_colours["transform"])
         p.add_layout(legend, "right")
-        p.xaxis.axis_label = 'text_name1'
-        p.yaxis.axis_label = 'text_name2'
+        p.xaxis.axis_label = 'text_id1'
+        p.yaxis.axis_label = 'text_id2'
         p.xaxis.axis_label_text_font_size = '16px'
         p.yaxis.axis_label_text_font_size = '16px'
         p.xaxis.major_label_text_font_size = '14px'
