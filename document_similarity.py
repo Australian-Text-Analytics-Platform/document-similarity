@@ -559,7 +559,7 @@ class DocumentSimilarity():
         
         Args:
             out_dir: the output file directory
-            file_name: the name of teh saved file
+            file_name: the name of the saved file
         '''
         # split into chunks
         chunks = np.array_split(df.index, len(df)) 
@@ -718,6 +718,13 @@ class DocumentSimilarity():
     def get_duplicate_df(self, 
                          df: pd.DataFrame,
                          duplicate: bool = False):
+        '''
+        Function to get list of duplicate/non-duplicate texts
+        
+        Args:
+            df: the dataframe containing the list of texts
+            duplictae: whether to search for duplicate/non-duplicate
+        '''
         if duplicate:
             temp_df = df[df.text_id.isin(self.similar_doc_id)].copy()
         else: 
@@ -727,6 +734,45 @@ class DocumentSimilarity():
             temp_df.rename(columns={'text_with_punc': 'text'}, inplace=True)
         
         return temp_df
+    
+    
+    def save_to_zip(self,
+                    df: pd.DataFrame,
+                    filename: str):
+        '''
+        Function to save texts to a zip of .txt file
+        
+        Args:
+            df: the dataframe containing the list of texts to save
+            filename: the name of the saved file
+        '''
+        # create an output folder if not already exist
+        os.makedirs('./output/saved_files', exist_ok=True)
+        
+        for index, row in tqdm(df.iterrows(), 
+                               total=len(df)):
+            with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
+                                                              row.text_name), 'w') as f:
+                f.write(row.text)
+            
+        def zipdir(path, ziph):
+            # ziph is zipfile handle
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    ziph.write(os.path.join(root, file), 
+                               os.path.relpath(os.path.join(root, file), 
+                                               os.path.join(path, '..')))
+
+        with zipfile.ZipFile('./output/'+filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipdir('./output/saved_files/', zipf)
+        
+        # remove files and directory once finished
+        os.system('rm -r ./output/saved_files')
+        print('Your texts have been saved. Click below to download:')
+        
+        # download the zip file onto your computer
+        file_name = './output/'+filename
+        display(DownloadFileLink(file_name, file_name[9:]))
     
     
     def finalise_and_save(self, n: int):
@@ -753,33 +799,9 @@ class DocumentSimilarity():
         def on_save_button_clicked(_):
             with save_out:
                 clear_output()
-                # create an output folder if not already exist
-                os.makedirs('./output/saved_files', exist_ok=True)
                 
-                for index, row in tqdm(self.deduplicated_text_df.iterrows(), 
-                                       total=len(self.deduplicated_text_df)):
-                    with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
-                                                                      row.text_name), 'w') as f:
-                        f.write(row.text)
-                    
-                def zipdir(path, ziph):
-                    # ziph is zipfile handle
-                    for root, dirs, files in os.walk(path):
-                        for file in files:
-                            ziph.write(os.path.join(root, file), 
-                                       os.path.relpath(os.path.join(root, file), 
-                                                       os.path.join(path, '..')))
-
-                with zipfile.ZipFile('./output/deduplicated_texts.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    zipdir('./output/saved_files/', zipf)
-                
-                # remove files and directory once finished
-                os.system('rm -r ./output/saved_files')
-                print('Deduplicated texts saved. Click below to download:')
-                
-                # download the zip file onto your computer
-                file_name = './output/deduplicated_texts.zip'
-                display(DownloadFileLink(file_name, file_name[9:]))
+                # compress and save deduplicated text files
+                self.save_to_zip(self.deduplicated_text_df, 'deduplicated_texts.zip')
         
         # link the save_button with the function
         save_button.on_click(on_save_button_clicked)
@@ -793,33 +815,9 @@ class DocumentSimilarity():
         def on_save_dup_button_clicked(_):
             with save_dup_out:
                 clear_output()
-                # create an output folder if not already exist
-                os.makedirs('./output/saved_files', exist_ok=True)
                 
-                for index, row in tqdm(self.duplicated_text_df.iterrows(), 
-                                       total=len(self.duplicated_text_df)):
-                    with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
-                                                                      row.text_name), 'w') as f:
-                        f.write(row.text)
-                    
-                def zipdir(path, ziph):
-                    # ziph is zipfile handle
-                    for root, dirs, files in os.walk(path):
-                        for file in files:
-                            ziph.write(os.path.join(root, file), 
-                                       os.path.relpath(os.path.join(root, file), 
-                                                       os.path.join(path, '..')))
-
-                with zipfile.ZipFile('./output/duplicated_texts.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    zipdir('./output/saved_files/', zipf)
-                
-                # remove files and directory once finished
-                os.system('rm -r ./output/saved_files')
-                print('Duplicated texts saved. Click below to download:')
-                
-                # download the zip file onto your computer
-                file_name = './output/duplicated_texts.zip'
-                display(DownloadFileLink(file_name, file_name[9:]))
+                # compress and save deduplicated text files
+                self.save_to_zip(self.duplicated_text_df, 'duplicated_texts.zip')
         
         # link the save_button with the function
         save_dup_button.on_click(on_save_dup_button_clicked)
