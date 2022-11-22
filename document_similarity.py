@@ -715,6 +715,20 @@ class DocumentSimilarity():
         return vbox
     
     
+    def get_duplicate_df(self, 
+                         df: pd.DataFrame,
+                         duplicate: bool = False):
+        if duplicate:
+            temp_df = df[df.text_id.isin(self.similar_doc_id)].copy()
+        else: 
+            temp_df = df[~df.text_id.isin(self.similar_doc_id)].copy()
+        if 'text_with_punc' in self.deduplicated_text_df:
+            temp_df.drop(['text'], axis=1, inplace=True)
+            temp_df.rename(columns={'text_with_punc': 'text'}, inplace=True)
+        
+        return temp_df
+    
+    
     def finalise_and_save(self, n: int):
         '''
         Function to finalise deduplication selections and save all kept texts 
@@ -726,10 +740,8 @@ class DocumentSimilarity():
         deduplicated_out = widgets.Output()
         
         with deduplicated_out:
-            self.duplicated_text_df = self.text_df[self.text_df.text_id.isin(self.similar_doc_id)].copy()
-            self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)].copy()
-            self.deduplicated_text_df.drop(['text'], axis=1, inplace=True)
-            self.deduplicated_text_df.rename(columns={'text_with_punc': 'text'}, inplace=True)
+            self.duplicated_text_df = self.get_duplicate_df(self.text_df, True)
+            self.deduplicated_text_df = self.get_duplicate_df(self.text_df, False)
             display(self.deduplicated_text_df.iloc[:,0:4].head(n))
             
         # widget to save non-duplicated texts
