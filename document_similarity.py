@@ -1045,6 +1045,8 @@ class DocumentSimilarity():
             font_size: the font size of the label texts
             text_color: the font color of the label texts
         '''
+        print('\n\033[1mYou can hover over the similar nodes to display the text name pairs.\033[0m\n')
+        
         # visualise similarity scores
         title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
         
