@@ -354,6 +354,10 @@ class DocumentSimilarity():
         
         # clear up all_data
         all_data = []; files = []
+        
+        # deduplicate the text_df by text_id
+        if deduplication:
+            self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
     
     
     def calculate_similarity(self, 
@@ -468,6 +472,11 @@ class DocumentSimilarity():
                 suffixes=('1', '2'),
                 how='left').drop('text_id', axis=1)
             
+            # get similar documents id
+            self.similar_doc_id = self.get_duplicate_ids(
+                self.deduplication_df,
+                similarity_cutoff)
+            
             # Step 8: removing duplication from list of similar documents
             keep_index = {'index': [],
                           'text_pair': []}
@@ -479,10 +488,6 @@ class DocumentSimilarity():
                     keep_index['text_pair'].append(set([row.text_id1,row.text_id2]))
             
             self.deduplication_df = self.deduplication_df[self.deduplication_df.index.isin(keep_index['index'])]
-            
-            self.similar_doc_id = self.get_duplicate_ids(
-                self.deduplication_df,
-                similarity_cutoff)
             
             # Step 9: recommendation to keep or remove and deduplciate documents
             #print('Step 9/9...')
