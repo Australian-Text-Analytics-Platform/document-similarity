@@ -756,8 +756,9 @@ class DocumentSimilarity():
         
         for index, row in tqdm(df.iterrows(), 
                                total=len(df)):
-            with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
-                                                              row.text_name), 'w') as f:
+            #with open('./output/saved_files/{}_{}.txt'.format(row.text_id, 
+            #                                                  row.text_name), 'w') as f:
+            with open('./output/saved_files/{}.txt'.format(row.text_name), 'w') as f:
                 f.write(row.text)
             
         def zipdir(path, ziph):
