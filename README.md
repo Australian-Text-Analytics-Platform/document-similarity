@@ -1,6 +1,6 @@
 # Document Similarity
 
-<b>Abstract:</b> in this notebook, you can use the DocumentSimilarity tool to identify similar documents in your corpus and decide whether to 'keep' or 'remove' them from the corpus.  
+<b>Abstract:</b> in this notebook, you can use the DocumentSimilarity tool to identify similar documents within your corpus. Once you identify those similar documents, you can decide whether to 'keep' or 'remove' them from the corpus. This tool is very useful for cleaning up your corpus and removing any duplicates or similar documents before you continue with your research..  
 
 ## Setup
 This tool has been designed for use with minimal setup from users. You are able to run it in the cloud and any dependencies with other packages will be installed for you automatically. In order to launch and use the tool, you just need to click the below icon.
@@ -41,5 +41,10 @@ You can also show pair of identified similar documents side-by-side, decide whet
 <img width='740' src='./img/deduplication_table.png'/> 
 
 ## Reference
-This tool uses [MinHash](https://ekzhu.com/datasketch/minhash.html) to estimate the Jaccard similarity between sets of documents. MinHash is introduced by Andrei Z. Broder in this [paper](https://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf).
+This tool uses [MinHash](https://ekzhu.com/datasketch/minhash.html) to estimate the Jaccard similarity between sets of documents. MinHash is introduced by Andrei Z. Broder in this [paper](https://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf).  
+
+## Citation
+If you find the Document Similarity useful in your research, please cite the following:  
+
+Jufri, Sony & Sun, Chao (2022). Document Similarity. v1.0. Australian Text Analytics Platform. Software. https://github.com/Australian-Text-Analytics-Platform/document-similarity
 

@@ -1,0 +1,40 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Document Similarity
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Sony
+    family-names: Jufri
+    email: sony.jufri@sydney.edu.au
+    affiliation: >-
+      Sydney Informatics Hub, a core research facility of
+      the University of Sydney
+  - given-names: Chao
+    family-names: Sun
+    email: chao.sun@sydney.edu.au
+    affiliation: >-
+      Sydney Informatics Hub, a core research facility of
+      the University of Sydney
+repository-code: >-
+  https://github.com/Australian-Text-Analytics-Platform/document-similarity
+abstract: >-
+  The Document Similarity is a tool that you can use to
+  identify similar documents within your corpus. Once you
+  identify those similar documents, you can decide whether
+  to 'keep' or 'remove' them from the corpus. This tool is
+  very useful for cleaning up your corpus and removing any
+  duplicates or similar documents before you continue with
+  your research.
+keywords:
+  - document similarity
+  - pre-processing
+  - similar documents
+  - duplicates
+license: Apache-2.0
+version: '1.0'
+date-released: '2023-02-07'
