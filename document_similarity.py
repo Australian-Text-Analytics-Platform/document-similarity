@@ -1206,8 +1206,8 @@ class DocumentSimilarity():
         # widgets for selecting n
         n_option = widgets.BoundedIntText(
             value=value,
-            min=0,
-            #max=len(self.text_df),
+            min=self.deduplication_df.index.min(),
+            max=self.deduplication_df.index.max(),
             step=1,
             description='',
             disabled=False,
