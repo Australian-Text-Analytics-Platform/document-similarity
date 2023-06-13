@@ -1035,7 +1035,8 @@ class DocumentSimilarity():
                                 width: int = 900,
                                 height: int = 700,
                                 font_size: str = '10px',
-                                text_color: str = 'white'):
+                                text_color: str = 'white',
+                                size: int=5000):
         '''
         Function to plot a histogram of similarity count
         
@@ -1045,13 +1046,15 @@ class DocumentSimilarity():
             height: the height of the heatmap
             font_size: the font size of the label texts
             text_color: the font color of the label texts
+            size: display the first N pairs
         '''
         print('\n\033[1mYou can hover over the similar nodes to display the text name pairs.\033[0m\n')
         
         # visualise similarity scores
         title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
         
-        df = self.deduplication_df.loc[:,['text_id1','text_id2','text_name1','text_name2','similarity']]
+        df = self.deduplication_df[:min(size, self.deduplicated_text_df.shape[0])]\
+                                       [['text_id1','text_id2','text_name1','text_name2','similarity']]
         df['sim_str'] = df['similarity'].apply(lambda x: round(x,2)).astype(str)
         
         tooltips = [
