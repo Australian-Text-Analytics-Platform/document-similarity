@@ -4,6 +4,7 @@
 Created on Wed Oct  5 16:09:13 2022
 
 @author: sjuf9909
+@reviewer/reviser: Chao Sun@SIH
 """
 # import required packages
 import codecs
@@ -16,6 +17,8 @@ from zipfile import ZipFile
 from pathlib import Path
 from itertools import chain
 import re
+
+from IPython.display import clear_output
 
 # import tools to calculate Jaccard similarity
 from datasketch import MinHash, MinHashLSH
@@ -620,6 +623,14 @@ class DocumentSimilarity():
                                                        margin='20px 0px 10px 0px',
                                                        width='150px')
         
+        nextpair_button, display_out = self.click_button_widget(desc='Next pair', 
+                                                       margin='20px 0px 10px 0px',
+                                                       width='150px')
+        
+        prevpair_button, display_out = self.click_button_widget(desc='Previous pair', 
+                                                       margin='20px 0px 10px 0px',
+                                                       width='150px')
+        
         # function to define what happens when the display button is clicked
         def on_display_button_clicked(_):
             with display_out:
@@ -635,8 +646,43 @@ class DocumentSimilarity():
             with save_out:
                 clear_output()
         
+        
+        # function to define what happens when the prev button is clicked
+        def on_prev_button_clicked(_):
+            with display_out:
+                clear_output()
+                index.value = max(self.deduplication_df.index.min(), index.value-1)
+                text_pair = self.deduplication_df[
+                    self.deduplication_df.index == index.value].iloc[0,:].squeeze()
+                self.show_comparison(text_pair)
+                
+                select_action.options = act_options
+                select_action.value = default_action['{} & {}'.format(text_pair.status1,
+                                                                      text_pair.status2)]
+            
+            with save_out:
+                clear_output()
+
+        # function to define what happens when the prev button is clicked
+        def on_next_button_clicked(_):
+            with display_out:
+                clear_output()
+                index.value = min(self.deduplication_df.index.max(), index.value+1)
+                text_pair = self.deduplication_df[
+                    self.deduplication_df.index == index.value].iloc[0,:].squeeze()
+                self.show_comparison(text_pair)
+                
+                select_action.options = act_options
+                select_action.value = default_action['{} & {}'.format(text_pair.status1,
+                                                                      text_pair.status2)]
+            
+            with save_out:
+                clear_output()
+        
         # link the display_button with the function
         display_button.on_click(on_display_button_clicked)
+        prevpair_button.on_click(on_prev_button_clicked)
+        nextpair_button.on_click(on_next_button_clicked)
         
         # function to define what happens when the update button is clicked
         def on_update_button_clicked(_):
@@ -664,13 +710,14 @@ class DocumentSimilarity():
             
             with save_out:
                 clear_output()
+
                     
         # link the update_button with the function
         update_button.on_click(on_update_button_clicked)
         
         # widget to save table
         save_button, save_out = self.click_button_widget(desc='Save table', 
-                                                       margin='0px 0px 0px 0px',
+                                                       margin='20px 0px 10px 0px',
                                                        width='150px')
         
         # function to define what happens when the display button is clicked
@@ -687,6 +734,8 @@ class DocumentSimilarity():
                                  out_dir,
                                  file_name)
                 
+                clear_output(wait=True)
+                
                 # download the saved file onto your computer
                 print('Table saved. Click below to download:')
                 display(DownloadFileLink(out_dir+file_name, file_name))
@@ -695,27 +744,21 @@ class DocumentSimilarity():
         # link the display_button with the function
         save_button.on_click(on_save_button_clicked)
         
-        # displaying inputs, buttons and their outputs
-        vbox1 = widgets.VBox([enter_index, 
-                              index, 
-                              display_button],
-                             layout = widgets.Layout(width='220px', height='130px'))
+        # Widget Layout
+        idx_input = widgets.HBox([enter_index, index], layout=widgets.Layout(width='400px', height='30px'))
+        action_input = widgets.HBox([enter_action, select_action], layout=widgets.Layout(width='400px', height='30px'))
+        disp_btn = widgets.HBox([display_button], layout=widgets.Layout(width='400px', height='70px'))
+        update_btn = widgets.HBox([update_button], layout=widgets.Layout(width='400px', height='70px'))        
+        save_btn = widgets.HBox([save_button], layout=widgets.Layout(width='220px', height='70px'))
+        prev_btn = widgets.HBox([prevpair_button], layout=widgets.Layout(width='220px', height='70px'))
+        next_btn = widgets.HBox([nextpair_button], layout=widgets.Layout(width='220px', height='70px'))
         
-        vbox2 = widgets.VBox([enter_action, 
-                              select_action, 
-                              update_button],
-                             layout = widgets.Layout(width='220px', height='130px'))
+        hbox1 = widgets.HBox([idx_input, action_input], layout=widgets.Layout(width='1000px'))
+        hbox2 = widgets.HBox([disp_btn, update_btn], layout=widgets.Layout(width='1000px'))
+        hbox3 = widgets.HBox([prev_btn, next_btn, save_btn], layout=widgets.Layout(width='1000px'))
+        hbox4 = widgets.HBox([save_out], layout=widgets.Layout(width='1000px', height='60px'))
         
-        vbox3 = widgets.VBox([save_button, save_out],)
-                             #layout = widgets.Layout(width='1000px', height='250px'))
-        
-        hbox1 = widgets.HBox([vbox1, vbox2],
-                             layout = widgets.Layout(width='1000px'))
-        
-        vbox4 = widgets.HBox([display_out],
-                             layout = widgets.Layout(height='300px'))
-        
-        vbox = widgets.VBox([list_out, hbox1, vbox3, update_out, vbox4])
+        vbox = widgets.VBox([list_out, hbox1, hbox2, hbox3, hbox4, display_out])
         
         return vbox
     
