@@ -36,6 +36,7 @@ from bokeh.io import output_notebook
 from bokeh.models import ColorBar, LabelSet, ColumnDataSource, HoverTool
 from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
+from bokeh.models import FixedTicker, FuncTickFormatter, FactorRange, CategoricalTicker
 output_notebook()
 
 # html visualization
@@ -1105,10 +1106,14 @@ class DocumentSimilarity():
             ('text_name2', '@text_name2'),
             ('similarity', '@sim_str'),
         ]
-        
+
+        x_range = df[['text_id1', 'text_name1']].set_index('text_id1').to_dict()['text_name1']
+        y_range = df[['text_id2', 'text_name2']].set_index('text_id2').to_dict()['text_name2']
+
+
         p = figure(title=title,
-                   x_range=list(set(df['text_id1'].to_list())),
-                   y_range=list(set(df['text_id2'].to_list())), 
+                   x_range=list(x_range.keys()),
+                   y_range=list(y_range.keys()), 
                    tooltips=tooltips,
                    plot_width=width, plot_height=height)
         
@@ -1143,8 +1148,26 @@ class DocumentSimilarity():
         
         legend = ColorBar(color_mapper=similarity_colours["transform"])
         p.add_layout(legend, "right")
-        p.xaxis.axis_label = 'text_id1'
-        p.yaxis.axis_label = 'text_id2'
+        # reset ticks label
+        p.xaxis.axis_label = 'text_name1'
+        p.yaxis.axis_label = 'text_name2'
+
+        # Replace Axis ticker labels
+        # Define custom JavaScript callback for x-axis tick labels
+        xaxis_tick_formatter = """
+            tick = tick.toString();
+            return %s[tick];
+        """ % x_range
+
+        # Define custom JavaScript callback for y-axis tick labels
+        yaxis_tick_formatter = """
+            tick = tick.toString();
+            return %s[tick];
+        """ % y_range
+
+        p.xaxis.formatter = FuncTickFormatter(code=xaxis_tick_formatter)
+        p.yaxis.formatter = FuncTickFormatter(code=yaxis_tick_formatter)
+
         p.xaxis.axis_label_text_font_size = '16px'
         p.yaxis.axis_label_text_font_size = '16px'
         p.xaxis.major_label_text_font_size = '14px'
