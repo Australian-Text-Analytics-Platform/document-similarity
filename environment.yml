@@ -9,7 +9,7 @@ dependencies:
   - python=3.9.13
   - gensim=4.1.2
   - tqdm=4.64.1
-  - pandas
+  - pandas=1.5.3
   - openpyxl=3.0.10
   - nltk=3.7
   - matplotlib=3.5.2
