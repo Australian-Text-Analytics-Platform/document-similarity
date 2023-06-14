@@ -423,7 +423,7 @@ class DocumentSimilarity():
             
             # Step 2: create text hash (to be used for estimating Jaccard similarity)
             # tqdm.pandas(desc='Step 2/9',leave=False)
-            self.text_df['hash'] = self.text_df['text'].swifter.progress_bar(desc='Step 2/9').apply(
+            self.text_df['hash'] = self.text_df.swifter.progress_bar(desc='Step 2/9').apply(
                 lambda x: self.make_text_hash(x.text, num_perm, ngram_value), 
                 axis=1
                 )
@@ -1094,6 +1094,22 @@ class DocumentSimilarity():
         
         return plot
     
+    def plot_data_range(self, inst):
+        if inst.lower() == 'y':
+            return self.deduplication_df.index
+        if inst.lower() == 'n':
+            return False
+        if inst.isnumeric():
+            maxidx = min(int(inst), self.deduplication_df.shape[0])
+            return self.deduplication_df.index[:maxidx]
+        if '-' in inst and len(inst.split('-')) == 2:
+            try:
+                [minidx, maxidx] = [int(n.strip()) for n in inst.split('-')]
+                maxidx = min(maxidx+1, self.deduplication_df.shape[0])
+                return self.deduplication_df.index[minidx:maxidx]
+            except:
+                return False
+
     
     def plot_heatmap_similarity(self,
                                 similarity_cutoff: float = 0.5,
@@ -1101,7 +1117,7 @@ class DocumentSimilarity():
                                 height: int = 700,
                                 font_size: str = '10px',
                                 text_color: str = 'white',
-                                size: int=5000):
+                                inst: str='n'):
         '''
         Function to plot a histogram of similarity count
         
@@ -1113,13 +1129,15 @@ class DocumentSimilarity():
             text_color: the font color of the label texts
             size: display the first N pairs
         '''
+
+        idx = self.plot_data_range(inst)
+        if idx is False:
+            return
         print('\n\033[1mYou can hover over the similar nodes to display the text name pairs.\033[0m\n')
-        
         # visualise similarity scores
-        title = 'Jaccard similarity heatmap (score>{})'.format(similarity_cutoff)
-        
-        df = self.deduplication_df[:min(size, self.deduplicated_text_df.shape[0])]\
-                                       [['text_id1','text_id2','text_name1','text_name2','similarity']]
+        title = 'Jaccard similarity heatmap (score>{})\n{} pairs of similar documents ranging from {} to {}'.format(similarity_cutoff, len(idx), min(idx), max(idx))
+
+        df = self.deduplication_df.loc[idx][['text_id1','text_id2','text_name1','text_name2','similarity']]
         df['sim_str'] = df['similarity'].apply(lambda x: round(x,2)).astype(str)
         
         tooltips = [
@@ -1136,7 +1154,8 @@ class DocumentSimilarity():
                    x_range=list(x_range.keys()),
                    y_range=list(y_range.keys()), 
                    tooltips=tooltips,
-                   plot_width=width, plot_height=height)
+                   plot_width=width, plot_height=height,
+                   )
         
         similarity_colours = linear_cmap("similarity", "Viridis256", 1, 0)
         
