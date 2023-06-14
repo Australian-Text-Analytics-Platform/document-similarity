@@ -31,12 +31,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import swifter
+
 # Bokeh: interactive plots
 from bokeh.io import output_notebook
 from bokeh.models import ColorBar, LabelSet, ColumnDataSource, HoverTool
 from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
-from bokeh.models import FixedTicker, FuncTickFormatter, FactorRange, CategoricalTicker
+from bokeh.models import FuncTickFormatter 
 output_notebook()
 
 # html visualization
@@ -400,18 +402,31 @@ class DocumentSimilarity():
                 self.text_df['text'] = self.text_df['text'].progress_apply(clean_text)
             
             # Step 1: calculate word counts
-            tqdm.pandas(desc='Step 1/9',leave=False)
-            self.text_df['word_count'] = self.text_df.progress_apply(
+            # tqdm.pandas(desc='Step 1/9',leave=False)
+            # self.text_df['word_count'] = self.text_df.progress_apply(
+            #     lambda x: self.count_text_words(x.text), 
+            #     axis=1)
+            
+            self.text_df['word_count'] = self.text_df.swifter.progress_bar(desc='Step 1/9').apply(
                 lambda x: self.count_text_words(x.text), 
-                axis=1)
+                axis=1
+                )
+            
+            # # Step 2: create text hash (to be used for estimating Jaccard similarity)
+            # tqdm.pandas(desc='Step 2/9',leave=False)
+            # self.text_df['hash'] = self.text_df.progress_apply(
+            #     lambda x: self.make_text_hash(x.text, 
+            #                                   num_perm, 
+            #                                   ngram_value), 
+            #     axis=1)
+            
             
             # Step 2: create text hash (to be used for estimating Jaccard similarity)
-            tqdm.pandas(desc='Step 2/9',leave=False)
-            self.text_df['hash'] = self.text_df.progress_apply(
-                lambda x: self.make_text_hash(x.text, 
-                                              num_perm, 
-                                              ngram_value), 
-                axis=1)
+            # tqdm.pandas(desc='Step 2/9',leave=False)
+            self.text_df['hash'] = self.text_df['text'].swifter.progress_bar(desc='Step 2/9').apply(
+                lambda x: self.make_text_hash(x.text, num_perm, ngram_value), 
+                axis=1
+                )
             
             # Step 3 and 4: identify similar documents based on estimated Jaccard similarity
             # Create LSH index
@@ -423,16 +438,21 @@ class DocumentSimilarity():
                 lsh.insert(row['text_id'], row['hash'])
             
             #print('Step 4/9...')
-            tqdm.pandas(desc='Step 4/9',leave=False)
-            self.text_df['matched_list'] = self.text_df.progress_apply(
+            # tqdm.pandas(desc='Step 4/9',leave=False)
+            # self.text_df['matched_list'] = self.text_df.progress_apply(
+            #     lambda x: self.get_matches(lsh, 
+            #                                x.hash, 
+            #                                x.text_id), 
+            #     axis=1)
+            self.text_df['matched_list'] = self.text_df.swifter.progress_bar(desc='Step 4/9').apply(
                 lambda x: self.get_matches(lsh, 
                                            x.hash, 
                                            x.text_id), 
                 axis=1)
             
             # Step 5: calculate actual or estimate Jaccard similarity
-            tqdm.pandas(desc='Step 5/9',leave=False)
-            self.text_df['jaccards'] = self.text_df.progress_apply(
+            # tqdm.pandas(desc='Step 5/9',leave=False)
+            self.text_df['jaccards'] = self.text_df.swifter.progress_bar(desc='Step 5/9').apply(
                 lambda x: self.get_jaccards(
                     df=self.text_df, 
                     original=x.text_id, 
@@ -441,17 +461,17 @@ class DocumentSimilarity():
                     actual_jaccard=actual_jaccard), axis=1)
             
             # Step 6 & 7: collating list of similar documents
-            tqdm.pandas(desc='Step 6/9',leave=False)
+            # tqdm.pandas(desc='Step 6/9',leave=False)
             intermediate_df = self.text_df[['matched_list', 
                                             'text_id', 
                                             'text_name',
                                             'jaccards']].copy()
-            intermediate_df['listlen'] = intermediate_df.progress_apply(
+            intermediate_df['listlen'] = intermediate_df.swifter.progress_bar(desc='Step 6/9').apply(
                 lambda x: len(x.matched_list), axis = 1)
             
-            tqdm.pandas(desc='Step 7/9',leave=False)
+            # tqdm.pandas(desc='Step 7/9',leave=False)
             intermediate_df = intermediate_df[intermediate_df.listlen > 0]
-            intermediate_df['text_id_duped'] = intermediate_df.progress_apply(
+            intermediate_df['text_id_duped'] = intermediate_df.swifter.progress_bar(desc='Step 7/9').apply(
                 lambda x: [x.text_id] * x.listlen, axis = 1)
             
             self.deduplication_df = pd.DataFrame(
@@ -519,7 +539,8 @@ class DocumentSimilarity():
             self.deduplication_df = self.deduplication_df[self.deduplication_df['similarity']>=similarity_cutoff]
             
             self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)]
-            
+            clear_output(wait=True)
+
             print('{} pair of similar documents found in the corpus.'.format(len(self.deduplication_df)))
         
         except:
