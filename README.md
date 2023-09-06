@@ -5,7 +5,7 @@
 ## Setup
 This tool has been designed for use with minimal setup from users. You are able to run it in the cloud and any dependencies with other packages will be installed for you automatically. In order to launch and use the tool, you just need to click the below icon.
 
-[![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/7b56aed90ca12ed74f4d36141ad782d8bf4685e7?labpath=document_similarity.ipynb)    
+[![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/1faaba99b20d4478651e3c4a01f1fc305e76a02e?labpath=document_similarity.ipynb)    
 
 <b>Note:</b> CILogon authentication is required. You can use your institutional, Google or Microsoft account to login.  
 
