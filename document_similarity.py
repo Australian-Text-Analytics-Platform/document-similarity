@@ -10,7 +10,6 @@ Updated on Tue Jan 30 2024
 Updated by: Hamish Croser@SIH
 """
 # import required packages
-import hashlib
 import os
 import zipfile
 
@@ -139,10 +138,14 @@ class DocumentSimilarity:
         """
 
     def set_text_df(self, corpus_loader: CorpusLoader):
-        new_text_df = corpus_loader.get_corpus().to_dataframe()
-        new_text_df.rename(columns={'filename': 'text_name', 'document_': 'text'}, inplace=True)
-        columns_to_keep = ['text', 'text_name']
-        self.text_df = self.hash_gen(new_text_df[columns_to_keep])
+        corpus_df = corpus_loader.get_corpus().to_dataframe()
+        new_text_df = pd.DataFrame(columns=['text'], dtype=str)
+        new_text_df['text'] = corpus_df['document_'].copy()
+        if 'filename' in corpus_df.columns:
+            new_text_df['text_name'] = corpus_df['filename'].copy()
+        else:
+            new_text_df['text_name'] = new_text_df.index
+        self.text_df = self.hash_gen(new_text_df)
         self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
 
     def click_button_widget(
@@ -178,7 +181,7 @@ class DocumentSimilarity:
             temp_df: the temporary pandas dataframe containing the text data
         """
         temp_df['text_id'] = temp_df['text'].apply(
-            lambda t: hashlib.shake_256(t.encode('utf-8')).hexdigest(5))
+            lambda t: str(hash(t)))
 
         return temp_df
 
