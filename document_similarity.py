@@ -145,6 +145,7 @@ class DocumentSimilarity:
             new_text_df['text_name'] = corpus_df['filename'].copy()
         else:
             new_text_df['text_name'] = new_text_df.index
+        new_text_df['text_name'] = new_text_df['text_name'].astype(str)
         self.text_df = self.hash_gen(new_text_df)
         self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
 
