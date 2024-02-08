@@ -13,7 +13,7 @@ Updated by: Hamish Croser@SIH
 import os
 import zipfile
 
-from corpusloader import CorpusLoader
+from atap_corpus_loader import CorpusLoader
 from tqdm import tqdm
 from itertools import chain
 import re
