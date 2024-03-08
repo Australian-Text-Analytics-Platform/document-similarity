@@ -22,4 +22,4 @@ dependencies:
   - pip
   - pip:
     - datasketch==1.5.8
-    - atap-corpus-loader==1.1.2
+    - atap-corpus-loader==1.1.3
