@@ -96,6 +96,7 @@ class DocumentSimilarity:
         self.large_file_size = 1000000
         self.exclude_punc = False
         self.text_df = pd.DataFrame()
+        self.dup_df = pd.DataFrame()
 
         # create an output folder if not already exist
         os.makedirs('output', exist_ok=True)
@@ -136,6 +137,21 @@ class DocumentSimilarity:
             }
         </style>
         """
+    def identical_docs(self):
+        out_dir = './output/'
+        file_name = 'identical_docs.xlsx'
+
+        dup_groups = []
+        for id, g in self.dup_df.groupby('text_id'):
+            dup_groups.append(g['text_name'].tolist())
+        df = pd.DataFrame(data = dup_groups).fillna('').rename(columns = {0:'Kept'})
+
+        print('{} duplicated files in {} groups are found, all duplicated files from each group are removed and the results can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0]))
+        
+        df = df.style.map(lambda x: 'font-weight: bold;', subset=pd.IndexSlice[:, ['Kept']])
+        df.to_excel(out_dir + file_name, index=False)
+        display(DownloadFileLink(out_dir + file_name))
+
 
     def set_text_df(self, corpus_loader: CorpusLoader):
         corpus_df = corpus_loader.get_corpus().to_dataframe()
@@ -147,7 +163,11 @@ class DocumentSimilarity:
             new_text_df['text_name'] = new_text_df.index
         new_text_df['text_name'] = new_text_df['text_name'].astype(str)
         self.text_df = self.hash_gen(new_text_df)
+        self.text_df.sort_values(by=['text_name'], ascending=True, inplace=True)
+
+        self.dup_df = self.text_df.groupby('text_id').filter(lambda x: len(x) > 1)
         self.text_df.drop_duplicates(subset='text_id', keep='first', inplace=True)
+        self.identical_docs()
 
     def click_button_widget(
             self,
