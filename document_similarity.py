@@ -24,6 +24,7 @@ from datasketch import MinHash, MinHashLSH
 # pandas and numpy: tools for data processing
 import pandas as pd
 import numpy as np
+import panel as pn
 
 # matplotlib & seaborn: visualization tools
 import seaborn as sns
@@ -138,32 +139,38 @@ class DocumentSimilarity:
         </style>
         """
     def identical_docs(self):
-        if self.dup_df.shape[0] > 0:
-            out_dir = './output/'
-            file_name = 'identical_docs.xlsx'
-
-            dup_groups = []
-            for id, g in self.dup_df.groupby('text_id'):
-                dup_groups.append(g['text_name'].tolist())
-            df = pd.DataFrame(data = dup_groups).fillna('').rename(columns = {0:'Kept'})
-
-            print('{} duplicated files in {} groups are found, all duplicated files from each group are removed and the results can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0]))
-            
-            df = df.style.map(lambda x: 'font-weight: bold;', subset=pd.IndexSlice[:, ['Kept']])
-            df.to_excel(out_dir + file_name, index=False)
-            display(DownloadFileLink(out_dir + file_name))
-        else:
+        if self.dup_df.empty:
             print('No identical document is found in the corpus.')
+            return
+        out_dir = './output/'
+        file_name = 'identical_docs.xlsx'
+
+        dup_groups = []
+        for id, g in self.dup_df.groupby('text_id'):
+            dup_groups.append(g['text_name'].tolist())
+        df = pd.DataFrame(data = dup_groups).fillna('').rename(columns = {0:'Kept'})
+
+        print('{} duplicated files in {} groups are found, all duplicated files from each group are removed and the results can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0]))
+        
+        df = df.style.map(lambda x: 'font-weight: bold;', subset=pd.IndexSlice[:, ['Kept']])
+        df.to_excel(out_dir + file_name, index=False)
+        display(DownloadFileLink(out_dir + file_name))
+        return
+            
 
 
     def set_text_df(self, corpus_loader: CorpusLoader):
         corpus_df = corpus_loader.get_corpus().to_dataframe()
         new_text_df = pd.DataFrame(columns=['text'], dtype=str)
         new_text_df['text'] = corpus_df['document_'].copy()
-        if 'filename' in corpus_df.columns:
+        if 'text_name' in corpus_df.columns:
+            print('text_name')
+            new_text_df['text_name'] = corpus_df['text_name'].copy()
+        elif 'filename' in corpus_df.columns:
             new_text_df['text_name'] = corpus_df['filename'].copy()
         else:
-            new_text_df['text_name'] = new_text_df.index
+            new_text_df['text_name'] = corpus_df.index
+            pn.pane.Alert('Please ensure a column header of "text_name" is in your spreadsheet.', alert_type="warning")
         new_text_df['text_name'] = new_text_df['text_name'].astype(str)
         self.text_df = self.hash_gen(new_text_df)
         self.text_df.sort_values(by=['text_name'], ascending=True, inplace=True)
