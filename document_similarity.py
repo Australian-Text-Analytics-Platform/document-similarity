@@ -51,11 +51,7 @@ from ipywidgets import Layout
 from IPython.display import display, clear_output, FileLink, HTML
 
 # import other packages
-from utils import get_projectpaths
 import hashlib
-
-output_notebook()
-(projectroot, rawdatapath, cleandatapath, processeddatapath) = get_projectpaths()
 
 
 class DownloadFileLink(FileLink):
