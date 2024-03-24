@@ -802,7 +802,7 @@ class DocumentSimilarity:
         # remove if article ID is the same (the same document)
         matches.remove(text_id)
 
-        return matches
+        return sorted(matches)
 
     def find_jaccard(self,
                      set1: set,
