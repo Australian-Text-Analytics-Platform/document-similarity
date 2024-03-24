@@ -52,6 +52,7 @@ from IPython.display import display, clear_output, FileLink, HTML
 
 # import other packages
 from utils import get_projectpaths
+import hashlib
 
 output_notebook()
 (projectroot, rawdatapath, cleandatapath, processeddatapath) = get_projectpaths()
@@ -160,7 +161,7 @@ class DocumentSimilarity:
 
 
     def set_text_df(self, corpus_loader: CorpusLoader):
-        corpus_df = corpus_loader.get_corpus().to_dataframe()
+        corpus_df = corpus_loader.get_latest_corpus().to_dataframe()
         new_text_df = pd.DataFrame(columns=['text'], dtype=str)
         new_text_df['text'] = corpus_df['document_'].copy()
         if 'text_name' in corpus_df.columns:
@@ -211,9 +212,8 @@ class DocumentSimilarity:
         Args:
             temp_df: the temporary pandas dataframe containing the text data
         """
-        temp_df['text_id'] = temp_df['text'].apply(
-            lambda t: str(hash(t)))
-
+        temp_df['text_id'] = temp_df['text'].str.encode('utf-8').apply(lambda t: hashlib.md5(t).hexdigest())
+                    #lambda t: str(hash(t)))
         return temp_df
 
     def calculate_similarity(self,
