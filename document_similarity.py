@@ -13,7 +13,7 @@ Updated by: Hamish Croser@SIH
 import os
 import zipfile
 
-from atap_corpus_loader import CorpusLoader
+from atap_corpus import Corpus
 from tqdm import tqdm
 from itertools import chain
 import re
@@ -147,7 +147,7 @@ class DocumentSimilarity:
             dup_groups.append(g['text_name'].tolist())
         df = pd.DataFrame(data = dup_groups).fillna('').rename(columns = {0:'Kept'})
 
-        print('{0} duplicated files in {1} groups are found. The first file of each group {1} are kept in the corpus and all other {2} files are removed and the results can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0], self.dup_df.shape[0] - df.shape[0]))
+        print('{0} duplicated (identical) files in {1} groups were found. The first file of each group {1} is kept in the corpus and the other {2} files are removed. The filenames can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0], self.dup_df.shape[0] - df.shape[0]))
         
         df = df.style.map(lambda x: 'font-weight: bold;', subset=pd.IndexSlice[:, ['Kept']])
         df.to_excel(out_dir + file_name, index=False)
@@ -155,9 +155,8 @@ class DocumentSimilarity:
         return
             
 
-
-    def set_text_df(self, corpus_loader: CorpusLoader):
-        corpus_df = corpus_loader.get_latest_corpus().to_dataframe()
+    def set_text_df(self, corpus: Corpus):
+        corpus_df = corpus.to_dataframe()
         new_text_df = pd.DataFrame(columns=['text'], dtype=str)
         new_text_df['text'] = corpus_df['document_'].copy()
         if 'text_name' in corpus_df.columns:
@@ -364,7 +363,7 @@ class DocumentSimilarity:
             self.deduplicated_text_df = self.text_df[~self.text_df.text_id.isin(self.similar_doc_id)]
             clear_output(wait=True)
 
-            print('{} pair of similar documents found in the corpus.'.format(len(self.deduplication_df)))
+            print('{} pairs of similar documents are found in the corpus.'.format(len(self.deduplication_df)))
 
         except Exception:
             print('No similar documents found. Please use lower simiarity cutoff to find similar documents...')
@@ -374,7 +373,7 @@ class DocumentSimilarity:
         Function to display deduplication text list
         """
         # display in html format for styling purpose
-        df_html = self.deduplication_df.to_html(escape=False)
+        df_html = self.deduplication_df[[c for c in self.deduplication_df.columns if c not in ['text_id1', 'text_id2']]].to_html(escape=False)
 
         # Concatenating to single string
         df_html = self.style + '<div class="dataframe-div">' + df_html + "\n</div>"
@@ -543,6 +542,12 @@ class DocumentSimilarity:
                 clear_output()
                 self.display_deduplication_list()
 
+            removeno = len(set(self.deduplication_df[self.deduplication_df.status1 == 'remove']['text_id1']).union(
+                self.deduplication_df[self.deduplication_df.status2 == 'remove']['text_id2']))
+            keepno = self.deduplication_df.shape[0] - removeno
+            info_out.value = '<p><b>{removeno}</b> documents will be removed; ' \
+            '<b>{keepno}</b> documents will be kept.</p>'.format(removeno = removeno, keepno = keepno)
+
             with display_out:
                 clear_output()
                 text_pair = self.deduplication_df[
@@ -583,20 +588,27 @@ class DocumentSimilarity:
         # link the display_button with the function
         save_button.on_click(on_save_button_clicked)
 
-        # Widget Layout
-        idx_input = widgets.HBox([enter_index, index], layout=widgets.Layout(width='400px', height='30px'))
-        action_input = widgets.HBox([enter_action, select_action], layout=widgets.Layout(width='400px', height='30px'))
-        disp_btn = widgets.HBox([display_button], layout=widgets.Layout(width='400px', height='70px'))
-        update_btn = widgets.HBox([update_button], layout=widgets.Layout(width='400px', height='70px'))
-        save_btn = widgets.HBox([save_button], layout=widgets.Layout(width='220px', height='70px'))
-        prev_btn = widgets.HBox([prevpair_button], layout=widgets.Layout(width='220px', height='70px'))
-        next_btn = widgets.HBox([nextpair_button], layout=widgets.Layout(width='220px', height='70px'))
+        removeno = len(set(self.deduplication_df[self.deduplication_df.status1 == 'remove']['text_id1']).union(
+                                                            self.deduplication_df[self.deduplication_df.status2 == 'remove']['text_id2']))
+        keepno = self.deduplication_df.shape[0] - removeno
 
+        # Widget Layout
+        idx_input = widgets.HBox([enter_index, index], layout=widgets.Layout(width='340px', height='35px'))
+        action_input = widgets.HBox([enter_action, select_action], layout=widgets.Layout(width='300px', height='35px'))
+        disp_btn = widgets.HBox([display_button], layout=widgets.Layout(width='200px'))#, height='45px'))
+        update_btn = widgets.HBox([update_button], layout=widgets.Layout(width='150px'))#, height='45px'))
+        save_btn = widgets.HBox([save_button], layout=widgets.Layout(width='220px'))#, height='45px'))
+        prev_btn = widgets.HBox([prevpair_button], layout=widgets.Layout(width='220px'))#, height='45px'))
+        next_btn = widgets.HBox([nextpair_button], layout=widgets.Layout(width='220px'))#, height='45px'))
+        
+        info_out = widgets.HBox([widgets.HTML(value='<p><b>{removeno}</b> documents will be removed;</p> ' 
+                                              '<p><b>{keepno}</b> documents will be kept.</p>'.format(removeno = removeno, keepno = keepno))], 
+                                layout=widgets.Layout(width='235px'))#, height='20px'))
         hbox1 = widgets.HBox([idx_input, action_input], layout=widgets.Layout(width='1000px'))
-        hbox2 = widgets.HBox([disp_btn, update_btn], layout=widgets.Layout(width='1000px'))
+        hbox2 = widgets.HBox([disp_btn, info_out, update_btn], layout=widgets.Layout(width='1000px'))
         hbox3 = widgets.HBox([prev_btn, next_btn, save_btn], layout=widgets.Layout(width='1000px'))
         hbox4 = widgets.HBox([save_out], layout=widgets.Layout(width='1000px', height='60px'))
-
+        
         vbox = widgets.VBox([list_out, hbox1, hbox2, hbox3, hbox4, display_out])
 
         return vbox
