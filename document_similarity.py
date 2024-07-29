@@ -147,7 +147,7 @@ class DocumentSimilarity:
             dup_groups.append(g['text_name'].tolist())
         df = pd.DataFrame(data = dup_groups).fillna('').rename(columns = {0:'Kept'})
 
-        print('{0} duplicated (identical) files in {1} groups were found. The first file of each group {1} is kept in the corpus and the other {2} files are removed. The filenames can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0], self.dup_df.shape[0] - df.shape[0]))
+        print(' {0} duplicated (identical) files in {1} groups were found.\n The first file of each group {1} is kept in the corpus and the other {2} files are removed.\n The filenames can be checked in the following spreadsheet.'.format(self.dup_df.shape[0], df.shape[0], self.dup_df.shape[0] - df.shape[0]))
         
         df = df.style.map(lambda x: 'font-weight: bold;', subset=pd.IndexSlice[:, ['Kept']])
         df.to_excel(out_dir + file_name, index=False)
