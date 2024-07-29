@@ -21,7 +21,7 @@ dependencies:
   - ipython=8.20
   - pip
   - pip:
-    - datasketch==1.5.8
+    - datasketch==1.6.4
     - atap-corpus-loader~=1.6.3
     - atap-corpus~=0.1.13
-    - scipy<1.13  # Higher version 1.13 is incompatible with Gensim. https://stackoverflow.com/a/78279318
+    - scipy<1.13  # Higher version (1.13) is incompatible with Gensim. https://stackoverflow.com/a/78279318
