@@ -51,5 +51,5 @@ This tool uses [MinHash](https://ekzhu.com/datasketch/minhash.html) to estimate 
 ## Citation
 If you find the Document Similarity useful in your research, please cite the following:  
 
-Jufri, Sony & Sun, Chao (2024). Document Similarity v1.2.0. Australian Text Analytics Platform. Software. https://github.com/Australian-Text-Analytics-Platform/document-similarity
+Jufri, Sony & Sun, Chao (2024). Document Similarity. v1.2. Australian Text Analytics Platform. Software. https://github.com/Australian-Text-Analytics-Platform/document-similarity
 
