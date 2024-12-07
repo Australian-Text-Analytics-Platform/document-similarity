@@ -52,3 +52,5 @@ If you find the Document Similarity useful in your research, please cite the fol
 
 Jufri, Sony & Sun, Chao (2024). Document Similarity. v1.2. Australian Text Analytics Platform. Software. https://github.com/Australian-Text-Analytics-Platform/document-similarity
 
+## Previous versions
+[v1.0](https://github.com/Australian-Text-Analytics-Platform/document-similarity/tree/v1.0.0) Notebook [![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.0.0?labpath=document_similarity.ipynb) 
