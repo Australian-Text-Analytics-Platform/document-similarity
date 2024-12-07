@@ -3,4 +3,5 @@
 data/
 output/
 .ipynb_checkpoints/
+output.xlsx
 .ipynb_checkpoints/document_similarity-checkpoint.ipynb
