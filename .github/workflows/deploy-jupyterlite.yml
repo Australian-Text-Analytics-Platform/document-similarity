@@ -1,0 +1,56 @@
+name: Deploy JupyterLite (WASM) to GitHub Pages
+
+# Builds the in-browser Document Similarity tool from lite/ and publishes it to
+# GitHub Pages. Enable Pages with "Source: GitHub Actions" in the repo settings.
+
+on:
+  push:
+    branches:
+      - wasm-jupyterlite-prototype  # change to 'main' once the prototype is merged
+    paths:
+      - "lite/**"
+      - ".github/workflows/deploy-jupyterlite.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tooling
+        run: python -m pip install -r lite/requirements.txt
+
+      - name: Build JupyterLite site
+        working-directory: lite
+        run: jupyter lite build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: lite/_output
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
