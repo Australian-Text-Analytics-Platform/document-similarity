@@ -414,7 +414,19 @@ class DocumentSimilarity:
             print('{} pairs of similar documents are found in the corpus.'.format(len(self.deduplication_df)))
 
         except Exception:
-            print('No similar documents found. Please use lower simiarity cutoff to find similar documents...')
+            # Always create the attribute so downstream cells (plots, table)
+            # fail with a clear message rather than AttributeError.
+            self.deduplication_df = pd.DataFrame(
+                columns=['text_id1', 'text_name1', 'word_count1', 'status1',
+                         'similarity', 'text_id2', 'text_name2', 'word_count2', 'status2'])
+            if not hasattr(self, 'similar_doc_id'):
+                self.similar_doc_id = []
+            self.deduplicated_text_df = self.text_df.copy()
+            print('No similar documents found above the similarity cutoff, '
+                  'or an error occurred. Details below — if this is an error, '
+                  'try a lower similarity_cutoff or report the traceback:')
+            import traceback
+            traceback.print_exc()
 
     def display_deduplication_list(self):
         """
@@ -945,6 +957,11 @@ class DocumentSimilarity:
         """
         # visualise similarity scores
         title = "Similarity count across the entire corpus"
+
+        if df is None or df.empty:
+            print('No similar document pairs to plot. '
+                  'Run the similarity calculation first, or lower similarity_cutoff.')
+            return
 
         plot = sns.histplot(data=(df[
             # return single row for article_id and similarity_score,
