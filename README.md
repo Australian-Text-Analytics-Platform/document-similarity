@@ -1,5 +1,7 @@
 # Document Similarity
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20542430.svg)](https://doi.org/10.5281/zenodo.20542430)
+
 <b>Abstract:</b> in this notebook, you can use the DocumentSimilarity tool to identify similar documents within your corpus. Once you identify those similar documents, you can decide whether to 'keep' or 'remove' them from the corpus. This tool is very useful for cleaning up your corpus and removing any duplicates or similar documents before you continue with your research..  
 
 ## Setup
@@ -57,7 +59,9 @@ This tool uses [MinHash](https://ekzhu.com/datasketch/minhash.html) to estimate 
 ## Citation
 If you find the Document Similarity useful in your research, please cite the following:  
 
-Jufri, Sony & Sun, Chao (2024). Document Similarity. v1.2. Australian Text Analytics Platform. Software. https://github.com/Australian-Text-Analytics-Platform/document-similarity
+Jufri, Sony & Sun, Chao (2024). Document Similarity. Australian Text Analytics Platform. Software. https://doi.org/10.5281/zenodo.20542430
+
+The DOI above is the *concept DOI* and always resolves to the latest release. To cite a specific version, use that version's DOI from the [Zenodo record](https://doi.org/10.5281/zenodo.20542430).
 
 ## Previous versions
 [v1.0](https://github.com/Australian-Text-Analytics-Platform/document-similarity/tree/v1.0.0) Notebook [![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.0.0?labpath=document_similarity.ipynb) 

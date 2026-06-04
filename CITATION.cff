@@ -38,3 +38,12 @@ keywords:
 license: Apache-2.0
 version: '1.3'
 date-released: '2026-06-04'
+doi: 10.5281/zenodo.20542430
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.20542430
+    description: >-
+      The concept DOI, resolving to the latest version of the software.
+  - type: doi
+    value: 10.5281/zenodo.20542431
+    description: The DOI for version 1.3.
