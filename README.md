@@ -5,6 +5,13 @@
 ## Setup
 This tool has been designed for use with minimal setup from users. You are able to run it in the cloud and any dependencies with other packages will be installed for you automatically. In order to launch and use the tool, you just need to click the below icon.
 
+### Lite version (runs in your browser)
+You can also run the tool entirely in your web browser — no login, no server, and your documents never leave your computer. Just open the link below (the first load takes a minute while it sets up):
+
+[Open the Lite version](https://australian-text-analytics-platform.github.io/document-similarity/notebooks/index.html?path=document_similarity.ipynb)
+
+### Cloud version (Binder)
+
 [![Binder](https://binderhub.rc.nectar.org.au/badge_logo.svg)](https://binderhub.rc.nectar.org.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.2.0?labpath=document_similarity.ipynb)    
 
 <b>Note:</b> CILogon authentication is required. If you are an Australian or New Zealand user, you can use your institutional account to login. If you have trouble authenticating, please refer to the [CILogon troubleshooting guide](documents/cilogon-troubleshooting.pdf).
