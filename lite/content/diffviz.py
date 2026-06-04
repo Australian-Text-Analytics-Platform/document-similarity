@@ -8,8 +8,8 @@ from itertools import zip_longest
 Token = str
 TokenList = List[Token]
 
-whitespace = re.compile('\s+')
-end_sentence = re.compile('[.!?]\s+')
+whitespace = re.compile(r'\s+')
+end_sentence = re.compile(r'[.!?]\s+')
 
 def tokenize(s:str) -> TokenList:
     '''Split a string into tokens'''

@@ -8,3 +8,9 @@ jupyterlite-pyodide-kernel>=0.4,<0.6
 # contents API (api/contents/all.json). Without it the site builds but the
 # notebook returns a 404 when opened.
 jupyter-server>=2.0
+# Frontend extension that renders ipywidgets in the browser. Installing it in
+# the build env federates the widget JS into the static site; the Python
+# `ipywidgets` package is installed kernel-side by the notebook's first cell.
+jupyterlab-widgets>=3.0
+# Lets the build load UI translations (otherwise a harmless warning).
+jupyterlab-server>=2.0
