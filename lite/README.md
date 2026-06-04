@@ -80,3 +80,19 @@ https://<org>.github.io/<repo>/lab/index.html?path=document_similarity.ipynb
   (alphabetic runs, digits excluded). It does not replicate gensim's optional
   `deacc`/`lowercase` flags (which the tool didn't use).
 - This is a **prototype** for evaluation, not a hardened release.
+
+## Troubleshooting
+
+**A code change / rebuild doesn't show up; the notebook runs the old cell
+(e.g. `ModuleNotFoundError` for a package the new install cell adds).**
+JupyterLite saves every notebook you open into the browser's local storage
+(IndexedDB) and loads *that* copy on later visits, ignoring the rebuilt file.
+A hard refresh does **not** clear it. To get the fresh notebook:
+
+1. In the JupyterLite file browser, right-click the notebook → **Delete**, then
+   reload and reopen it (it falls back to the freshly-built server copy); or
+2. DevTools → **Application → Storage → Clear site data**, then reload.
+
+The bundled `.py` modules are re-fetched on each kernel start, so only the
+notebook itself is "sticky". Always run the cells top to bottom — the first
+cell must finish installing packages before the import cell runs.
