@@ -47,9 +47,23 @@ import numpy as np
 import seaborn as sns
 
 # Bokeh: interactive plots
+from bokeh.io import output_notebook
 from bokeh.models import ColorBar, LabelSet, ColumnDataSource, CustomJSTickFormatter
 from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
+
+# Route Bokeh output to the notebook. Without this, show() tries to open the
+# plot in a new browser window (via js.window), which does not exist in the
+# Pyodide/JupyterLite kernel and raises "cannot import name 'window' from 'js'".
+# Loaded lazily so importing this module never fails if BokehJS can't load yet.
+_BOKEH_NOTEBOOK_READY = False
+
+
+def _ensure_bokeh_notebook():
+    global _BOKEH_NOTEBOOK_READY
+    if not _BOKEH_NOTEBOOK_READY:
+        output_notebook()
+        _BOKEH_NOTEBOOK_READY = True
 
 # html visualization
 from diffviz import html_diffs
@@ -1092,6 +1106,7 @@ class DocumentSimilarity:
         p.xaxis.major_label_text_font_size = '14px'
         p.yaxis.major_label_text_font_size = '14px'
 
+        _ensure_bokeh_notebook()
         show(p)
 
     def get_duplicate_ids(self,
