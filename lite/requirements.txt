@@ -4,3 +4,7 @@
 # notebook cell via piplite. These two packages only build the static site.
 jupyterlite-core>=0.4,<0.6
 jupyterlite-pyodide-kernel>=0.4,<0.6
+# Required by jupyterlite-core to index uploaded notebooks/files into the
+# contents API (api/contents/all.json). Without it the site builds but the
+# notebook returns a 404 when opened.
+jupyter-server>=2.0
