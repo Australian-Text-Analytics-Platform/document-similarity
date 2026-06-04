@@ -6,9 +6,9 @@
 This tool has been designed for use with minimal setup from users. You are able to run it in the cloud and any dependencies with other packages will be installed for you automatically. In order to launch and use the tool, you just need to click the below icon.
 
 ### Lite version (runs in your browser)
-You can also run the tool entirely in your web browser — no login, no server, and your documents never leave your computer. Just open the link below (the first load takes a minute while it sets up):
+You can also run the tool entirely in your web browser — no login, no server, and your documents never leave your computer. Just click the badge below (the first load takes a minute while it sets up):
 
-[Open the Lite version](https://australian-text-analytics-platform.github.io/document-similarity/notebooks/index.html?path=document_similarity.ipynb)
+[![lite-badge](https://jupyterlite.rtfd.io/en/stable/_static/badge.svg)](https://australian-text-analytics-platform.github.io/document-similarity/notebooks/index.html?path=document_similarity.ipynb)
 
 ### Cloud version (Binder)
 
