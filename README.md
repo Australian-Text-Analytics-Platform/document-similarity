@@ -16,9 +16,8 @@ You can also run the tool entirely in your web browser — no login, no server, 
 
 [![Binder](https://binderhub.rc.nectar.org.au/badge_logo.svg)](https://binderhub.rc.nectar.org.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.2.0?labpath=document_similarity.ipynb)    
 
-<b>Note:</b> CILogon authentication is required. If you are an Australian or New Zealand user, you can use your institutional account to login. If you have trouble authenticating, please refer to the [CILogon troubleshooting guide](documents/cilogon-troubleshooting.pdf).
-
-If you are an international user, you, you can use the below link to access the tool (this is a free Binder version, limited to 2GB memory only).
+<b>Note:</b> Australian Access Federation (AAF) or Reannz Tuakiri (NZ) authentication is required.
+If you do not have access to AAF or NZ, you can use the below link to access the tool (this is a free Binder version, limited to 2GB memory only).
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.2.0?labpath=document_similarity.ipynb)  
 
