@@ -14,12 +14,12 @@ You can also run the tool entirely in your web browser — no login, no server, 
 
 ### Cloud version (Binder)
 
-[![Binder](https://binderhub.rc.nectar.org.au/badge_logo.svg)](https://binderhub.rc.nectar.org.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.3.1?labpath=document_similarity.ipynb)    
+[![Binder](https://binderhub.rc.nectar.org.au/badge_logo.svg)](https://binderhub.rc.nectar.org.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.3.2?labpath=document_similarity.ipynb)    
 
 <b>Note:</b> Australian Access Federation (AAF) or Reannz Tuakiri (NZ) authentication is required.
 If you do not have access to AAF or NZ, you can use the below link to access the tool (this is a free Binder version, limited to 2GB memory only).
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.3.1?labpath=document_similarity.ipynb)  
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.3.2?labpath=document_similarity.ipynb)  
 
 It may take a few minutes for Binder to launch the notebook and install the dependencies for the tool. Please be patient.
 
