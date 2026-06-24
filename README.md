@@ -10,6 +10,8 @@ This tool has been designed for use with minimal setup from users. You are able 
 ### Lite version (runs in your browser)
 You can also run the tool entirely in your web browser — no login, no server, and your documents never leave your computer. Just click the badge below (the first load takes a minute while it sets up):
 
+The Lite version runs Python in your browser, so it is ideal for smaller corpora.
+
 [![lite-badge](https://jupyterlite.rtfd.io/en/stable/_static/badge.svg)](https://australian-text-analytics-platform.github.io/document-similarity/notebooks/index.html?path=document_similarity.ipynb)
 
 ### Cloud version (Binder)

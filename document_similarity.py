@@ -52,33 +52,41 @@ from IPython.display import display, clear_output, FileLink, HTML
 
 # import other packages
 import hashlib
+import sys
+import base64
+import traceback
+from html import escape
+
+# True when running under JupyterLite/Pyodide (Python compiled to WebAssembly in
+# the browser). There is no multiprocessing and no server filesystem there, so a
+# few things need to behave differently (progress bars, file downloads).
+IS_PYODIDE = (sys.platform == "emscripten") or ("pyodide" in sys.modules)
 
 
-class DownloadFileLink(FileLink):
+class DownloadFileLink(HTML):
     """
-    Create link to download files in Jupyter Notebook
+    Create a link that downloads a file directly from the browser.
+
+    The file's bytes are embedded in the link as a base64 ``data:`` URI rather
+    than pointing at a file path. A path-based link (the default IPython
+    ``FileLink``) only works when a Jupyter server is serving the working
+    directory; under JupyterLite the notebook is a static site with no server,
+    so a path link resolves to a non-existent URL ("File wasn't available on
+    site"). Embedding the bytes makes the download work both on a server
+    (Binder) and in the browser (JupyterLite).
     """
-    html_link_str = "<a href='{link}' download={file_name}>{link_text}</a>"
 
     def __init__(self, path, file_name=None, link_text=None, *args, **kwargs):
-        super(DownloadFileLink, self).__init__(path, *args, **kwargs)
+        file_name = file_name or os.path.split(path)[1]
+        link_text = link_text or file_name
 
-        self.file_name = file_name or os.path.split(path)[1]
-        self.link_text = link_text or self.file_name
+        with open(path, 'rb') as f:
+            payload = base64.b64encode(f.read()).decode('ascii')
+        href = "data:application/octet-stream;base64," + payload
 
-    def _format_path(self):
-        from html import escape
-
-        fp = "".join([self.url_prefix, escape(self.path)])
-        return "".join(
-            [
-                self.result_html_prefix,
-                self.html_link_str.format(
-                    link=fp, file_name=self.file_name, link_text=self.link_text
-                ),
-                self.result_html_suffix,
-            ]
-        )
+        html = "<a download='{file_name}' href='{href}'>{link_text}</a>".format(
+            file_name=escape(file_name), href=href, link_text=escape(link_text))
+        super().__init__(html)
 
 
 class DocumentSimilarity:
@@ -211,6 +219,27 @@ class DocumentSimilarity:
                     #lambda t: str(hash(t)))
         return temp_df
 
+    def _apply(self, df: pd.DataFrame, func, desc: str):
+        """
+        Apply ``func`` to every row of ``df`` (axis=1) with a progress bar.
+
+        On a normal server we use ``swifter`` to spread the work across CPU
+        cores. Under JupyterLite/Pyodide there is no multiprocessing (so swifter
+        would silently run serially anyway) and swifter's progress bar relies on
+        the ipywidgets widget, which isn't wired up there and emits a noisy
+        "IProgress not found" warning. In that case we fall back to a plain
+        text tqdm progress bar instead.
+
+        Args:
+            df: the pandas DataFrame to apply over
+            func: the row-wise function to apply
+            desc: the label shown on the progress bar
+        """
+        if IS_PYODIDE:
+            tqdm.pandas(desc=desc)
+            return df.progress_apply(func, axis=1)
+        return df.swifter.progress_bar(desc=desc).apply(func, axis=1)
+
     def calculate_similarity(self,
                              ngram_value: int = 1,
                              num_perm: int = 256,
@@ -247,16 +276,16 @@ class DocumentSimilarity:
                 self.text_df['text'] = self.text_df['text'].progress_apply(clean_text)
 
             # Step 1: calculate word counts
-            self.text_df['word_count'] = self.text_df.swifter.progress_bar(desc='Step 1/9').apply(
+            self.text_df['word_count'] = self._apply(
+                self.text_df,
                 lambda x: self.count_text_words(x.text),
-                axis=1
-            )
+                desc='Step 1/9')
 
             # Step 2: create text hash (to be used for estimating Jaccard similarity)
-            self.text_df['hash'] = self.text_df.swifter.progress_bar(desc='Step 2/9').apply(
+            self.text_df['hash'] = self._apply(
+                self.text_df,
                 lambda x: self.make_text_hash(x.text, num_perm, ngram_value),
-                axis=1
-            )
+                desc='Step 2/9')
 
             # Step 3 and 4: identify similar documents based on estimated Jaccard similarity
             # Create LSH index
@@ -267,32 +296,39 @@ class DocumentSimilarity:
                                    desc='Step 3/9', leave=False):
                 lsh.insert(row['text_id'], row['hash'])
 
-            self.text_df['matched_list'] = self.text_df.swifter.progress_bar(desc='Step 4/9').apply(
+            self.text_df['matched_list'] = self._apply(
+                self.text_df,
                 lambda x: self.get_matches(lsh,
                                            x.hash,
                                            x.text_id),
-                axis=1)
+                desc='Step 4/9')
 
             # Step 5: calculate actual or estimate Jaccard similarity
-            self.text_df['jaccards'] = self.text_df.swifter.progress_bar(desc='Step 5/9').apply(
+            self.text_df['jaccards'] = self._apply(
+                self.text_df,
                 lambda x: self.get_jaccards(
                     df=self.text_df,
                     original=x.text_id,
                     matched_list=x.matched_list,
                     ngram_value=ngram_value,
-                    actual_jaccard=actual_jaccard), axis=1)
+                    actual_jaccard=actual_jaccard),
+                desc='Step 5/9')
 
             # Step 6 & 7: collating list of similar documents
             intermediate_df = self.text_df[['matched_list',
                                             'text_id',
                                             'text_name',
                                             'jaccards']].copy()
-            intermediate_df['listlen'] = intermediate_df.swifter.progress_bar(desc='Step 6/9').apply(
-                lambda x: len(x.matched_list), axis=1)
+            intermediate_df['listlen'] = self._apply(
+                intermediate_df,
+                lambda x: len(x.matched_list),
+                desc='Step 6/9')
 
             intermediate_df = intermediate_df[intermediate_df.listlen > 0]
-            intermediate_df['text_id_duped'] = intermediate_df.swifter.progress_bar(desc='Step 7/9').apply(
-                lambda x: [x.text_id] * x.listlen, axis=1)
+            intermediate_df['text_id_duped'] = self._apply(
+                intermediate_df,
+                lambda x: [x.text_id] * x.listlen,
+                desc='Step 7/9')
 
             self.deduplication_df = pd.DataFrame(
                 {
@@ -321,18 +357,22 @@ class DocumentSimilarity:
                 self.deduplication_df,
                 similarity_cutoff)
 
-            # Step 8: removing duplication from list of similar documents
-            keep_index = {'index': [],
-                          'text_pair': []}
+            # Step 8: drop duplicate (unordered) document pairs, keeping the
+            # first occurrence of each {text_id1, text_id2} pair. A frozenset is
+            # used as the lookup key (it is hashable and order-independent) so
+            # membership is O(1); a list of sets here would make this O(n^2) and
+            # crawl on large corpora with many matches.
+            keep_index = []
+            seen_pairs = set()
             for index, row in tqdm(self.deduplication_df.iterrows(),
                                    total=len(self.deduplication_df),
                                    desc='Step 8/9', leave=False):
-                text_pair_set = {row.text_id1, row.text_id2}
-                if text_pair_set not in keep_index['text_pair']:
-                    keep_index['index'].append(index)
-                    keep_index['text_pair'].append(text_pair_set)
+                pair = frozenset((row.text_id1, row.text_id2))
+                if pair not in seen_pairs:
+                    seen_pairs.add(pair)
+                    keep_index.append(index)
 
-            self.deduplication_df = self.deduplication_df[self.deduplication_df.index.isin(keep_index['index'])]
+            self.deduplication_df = self.deduplication_df[self.deduplication_df.index.isin(keep_index)]
 
             # Step 9: recommendation to keep or remove and deduplicate documents
             status1 = []
@@ -365,8 +405,19 @@ class DocumentSimilarity:
 
             print('{} pairs of similar documents are found in the corpus.'.format(len(self.deduplication_df)))
 
+        except MemoryError:
+            print('Ran out of memory while calculating similarity. '
+                  'Try a smaller corpus or a higher similarity cutoff.')
+            raise
+
         except Exception:
-            print('No similar documents found. Please use lower simiarity cutoff to find similar documents...')
+            # Surface the real error instead of masking every failure as
+            # "no similar documents found" (which previously hid problems such
+            # as running out of memory). A genuinely empty result does not reach
+            # here -- it is reported above as "0 pairs of similar documents".
+            print('An error occurred while calculating similarity:')
+            traceback.print_exc()
+            raise
 
     def display_deduplication_list(self):
         """
