@@ -79,6 +79,8 @@ from IPython.display import display, clear_output, FileLink, HTML
 
 # import other packages
 import hashlib
+import base64
+from html import escape
 
 
 # ---------------------------------------------------------------------------
@@ -96,31 +98,29 @@ def tokenize(text):
         yield match.group()
 
 
-class DownloadFileLink(FileLink):
+class DownloadFileLink(HTML):
     """
-    Create link to download files in Jupyter Notebook
+    Create a link that downloads a file directly from the browser.
+
+    The file's bytes are embedded in the link as a base64 ``data:`` URI rather
+    than pointing at a file path. A path-based link (the default IPython
+    ``FileLink``) only works when a Jupyter server is serving the working
+    directory; under JupyterLite the notebook is a static site with no server,
+    so a path link resolves to a non-existent URL ("File wasn't available on
+    site"). Embedding the bytes makes the download work in the browser.
     """
-    html_link_str = "<a href='{link}' download={file_name}>{link_text}</a>"
 
     def __init__(self, path, file_name=None, link_text=None, *args, **kwargs):
-        super(DownloadFileLink, self).__init__(path, *args, **kwargs)
+        file_name = file_name or os.path.split(path)[1]
+        link_text = link_text or file_name
 
-        self.file_name = file_name or os.path.split(path)[1]
-        self.link_text = link_text or self.file_name
+        with open(path, 'rb') as f:
+            payload = base64.b64encode(f.read()).decode('ascii')
+        href = "data:application/octet-stream;base64," + payload
 
-    def _format_path(self):
-        from html import escape
-
-        fp = "".join([self.url_prefix, escape(self.path)])
-        return "".join(
-            [
-                self.result_html_prefix,
-                self.html_link_str.format(
-                    link=fp, file_name=self.file_name, link_text=self.link_text
-                ),
-                self.result_html_suffix,
-            ]
-        )
+        html = "<a download='{file_name}' href='{href}'>{link_text}</a>".format(
+            file_name=escape(file_name), href=href, link_text=escape(link_text))
+        super().__init__(html)
 
 
 class DocumentSimilarity:
@@ -383,18 +383,22 @@ class DocumentSimilarity:
                 self.deduplication_df,
                 similarity_cutoff)
 
-            # Step 8: removing duplication from list of similar documents
-            keep_index = {'index': [],
-                          'text_pair': []}
+            # Step 8: drop duplicate (unordered) document pairs, keeping the
+            # first occurrence of each {text_id1, text_id2} pair. A frozenset is
+            # used as the lookup key (hashable and order-independent) so
+            # membership is O(1); a list of sets here would make this O(n^2) and
+            # crawl on large corpora with many matches.
+            keep_index = []
+            seen_pairs = set()
             for index, row in tqdm(self.deduplication_df.iterrows(),
                                    total=len(self.deduplication_df),
                                    desc='Step 8/9', leave=False):
-                text_pair_set = {row.text_id1, row.text_id2}
-                if text_pair_set not in keep_index['text_pair']:
-                    keep_index['index'].append(index)
-                    keep_index['text_pair'].append(text_pair_set)
+                pair = frozenset((row.text_id1, row.text_id2))
+                if pair not in seen_pairs:
+                    seen_pairs.add(pair)
+                    keep_index.append(index)
 
-            self.deduplication_df = self.deduplication_df[self.deduplication_df.index.isin(keep_index['index'])]
+            self.deduplication_df = self.deduplication_df[self.deduplication_df.index.isin(keep_index)]
 
             # Step 9: recommendation to keep or remove and deduplicate documents
             status1 = []
