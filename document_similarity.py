@@ -65,51 +65,36 @@ IS_PYODIDE = (sys.platform == "emscripten") or ("pyodide" in sys.modules)
 
 class DownloadFileLink(HTML):
     """
-    Show a link that downloads a file directly from the browser.
+    Show a link that downloads a file from the notebook.
 
-    Under JupyterLite the notebook is a static site with no server, so the
-    default IPython ``FileLink`` (a path-based link) resolves to a non-existent
-    URL ("File wasn't available on site") and fails. Instead we hand the file's
-    bytes to the browser and build a Blob object URL for the link.
+    The link is built differently depending on where the notebook runs:
 
-    A Blob is used rather than embedding the bytes as a base64 ``data:`` URI in
-    the href because large ``data:`` URI downloads are unreliable/blocked (most
-    notably in Safari), which breaks downloads of bigger outputs such as the
-    zip of saved texts. Blob object URLs handle large files reliably, on a
-    server (Binder) and in the browser (JupyterLite) alike.
+    * On a Jupyter server (e.g. Binder) the href points at the file served by
+      the server. The browser streams it on click without loading it into
+      memory, so this handles large files (such as the zip of saved texts).
+
+    * Under JupyterLite there is no server, so a path link resolves to a
+      non-existent URL ("File wasn't available on site"). Instead the file's
+      bytes are embedded as a base64 ``data:`` URI. This is a plain href (no
+      JavaScript), so it also works inside the ipywidgets Output widgets used by
+      the save buttons. JupyterLite exports a single CSV, which keeps this
+      manageable; very large files may still hit browser ``data:`` URI limits.
     """
 
     def __init__(self, path, file_name=None, link_text=None, *args, **kwargs):
         file_name = file_name or os.path.split(path)[1]
         link_text = link_text or file_name
 
-        with open(path, 'rb') as f:
-            payload = base64.b64encode(f.read()).decode('ascii')
-
-        elem_id = 'dl_' + hashlib.md5((path + file_name).encode()).hexdigest()[:12]
-
-        # Decode the base64 payload into a Blob and attach an object URL to the
-        # link. display(Javascript(...)) executes (an application/javascript
-        # output is not sanitised, unlike a <script> tag inside HTML output); it
-        # polls for the link element to avoid an ordering race with the HTML
-        # rendered just below.
-        display(Javascript("""
-        (function() {
-          var b64 = "%s";
-          function attach(tries) {
-            var a = document.getElementById("%s");
-            if (!a) { if (tries > 0) { setTimeout(function(){ attach(tries - 1); }, 300); } return; }
-            var bin = atob(b64), arr = new Uint8Array(bin.length);
-            for (var i = 0; i < bin.length; i++) { arr[i] = bin.charCodeAt(i); }
-            a.href = URL.createObjectURL(new Blob([arr], {type: "application/octet-stream"}));
-          }
-          attach(40);
-        })();
-        """ % (payload, elem_id)))
+        if IS_PYODIDE:
+            with open(path, 'rb') as f:
+                payload = base64.b64encode(f.read()).decode('ascii')
+            href = "data:application/octet-stream;base64," + payload
+        else:
+            href = escape(path)
 
         super().__init__(
-            "<a id='{eid}' download='{fn}' href='#'>{txt}</a>".format(
-                eid=elem_id, fn=escape(file_name), txt=escape(link_text)))
+            "<a download='{fn}' href='{href}'>{txt}</a>".format(
+                fn=escape(file_name), href=href, txt=escape(link_text)))
 
 
 class DocumentSimilarity:
@@ -188,6 +173,12 @@ class DocumentSimilarity:
 
     def set_text_df(self, corpus: Corpus):
         corpus_df = corpus.to_dataframe()
+        # The corpus loader auto-adds a 'filename' column when documents are
+        # uploaded as individual files (e.g. a zip of .txt files). Spreadsheet
+        # uploads (CSV/xlsx, one row per document) have no such column. This
+        # drives the export format: a zip of .txt files for file-based inputs,
+        # a single CSV for spreadsheet inputs (see save_results).
+        self.input_is_file_based = 'filename' in corpus_df.columns
         new_text_df = pd.DataFrame(columns=['text'], dtype=str)
         new_text_df['text'] = corpus_df['document_'].copy()
         if 'text_name' in corpus_df.columns:
@@ -485,20 +476,39 @@ class DocumentSimilarity:
             out_dir: the output file directory
             file_name: the name of the saved file
         """
-        # split into chunks
-        chunks = np.array_split(df.index, len(df))
+        # Write the whole frame in one call. (A previous version split the index
+        # into len(df) chunks -- i.e. one row per chunk -- and appended row by
+        # row, which is O(n) file operations and extremely slow on large
+        # corpora. pandas handles a large DataFrame in a single to_csv fine.)
+        df.to_csv(out_dir + file_name, index=True)
 
-        # save the tagged text into csv
-        for chunk, subset in enumerate(tqdm(chunks)):
-            if chunk == 0:
-                df.loc[subset].to_csv(out_dir + file_name,
-                                      mode='w',
-                                      index=True)
-            else:
-                df.loc[subset].to_csv(out_dir + file_name,
-                                      header=None,
-                                      mode='a',
-                                      index=True)
+    def save_results(self, df: pd.DataFrame, base_name: str):
+        """
+        Save the deduplication results in the format that matches the input.
+
+        * JupyterLite (always) and spreadsheet inputs (CSV/xlsx) -> a single CSV
+          with the ``text_name`` and ``text`` columns. One file, light to create
+          and download in the browser.
+        * File-based inputs on a server (e.g. a zip of .txt files on Binder) ->
+          a zip of .txt files (one per document), matching the upload.
+
+        Args:
+            df: the documents to save
+            base_name: the output file name without extension
+        """
+        import os
+        out_dir = './output/'
+        os.makedirs('output', exist_ok=True)
+
+        if IS_PYODIDE or not getattr(self, 'input_is_file_based', False):
+            file_name = base_name + '.csv'
+            cols = [c for c in ['text_name', 'text'] if c in df.columns]
+            df[cols].to_csv(out_dir + file_name, index=False)
+            print('Your results have been saved. Click below to download:')
+            display(DownloadFileLink(out_dir + file_name, file_name))
+        else:
+            # save_to_zip prints its own message and shows the download link
+            self.save_to_zip(df, base_name + '.zip')
 
     def display_deduplication_text(self):
         """
@@ -772,7 +782,7 @@ class DocumentSimilarity:
                 clear_output()
 
                 # compress and save deduplicated text files
-                self.save_to_zip(self.deduplicated_text_df, 'deduplicated_texts.zip')
+                self.save_results(self.deduplicated_text_df, 'deduplicated_texts')
 
         # link the save_button with the function
         save_button.on_click(on_save_button_clicked)
@@ -788,7 +798,7 @@ class DocumentSimilarity:
                 clear_output()
 
                 # compress and save deduplicated text files
-                self.save_to_zip(self.duplicated_text_df, 'duplicated_texts.zip')
+                self.save_results(self.duplicated_text_df, 'duplicated_texts')
 
         # link the save_button with the function
         save_dup_button.on_click(on_save_dup_button_clicked)
