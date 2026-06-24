@@ -147,8 +147,16 @@ cells = [
     md(
         "## 5. Save your results\n",
         "\n",
-        "Save the documents you chose to keep (or the ones marked for removal) as a downloadable ",
-        "zip of .txt files. Click the download link that appears.",
+        "Save the documents you chose to keep (or the ones marked for removal) and download them. ",
+        "Click the download link that appears after you click **'Save non-duplicated texts'** or ",
+        "**'Save duplicated texts'**.\n",
+        "\n",
+        "**This in-browser (Lite) version always saves a single `.csv`** (with `text_name` and `text` ",
+        "columns), regardless of how you uploaded your data. This keeps saving fast and within the ",
+        "browser's memory limits. For very large corpora, use the ",
+        "[Cloud (Binder) version](https://github.com/Australian-Text-Analytics-Platform/document-similarity#cloud-version-binder), ",
+        "which can also export a zip of `.txt` files to match a file-based upload and streams the "
+        "download from a server.",
     ),
     code(
         "rows_to_display = 5\n",
