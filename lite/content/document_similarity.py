@@ -315,7 +315,9 @@ class DocumentSimilarity:
             )
 
             # Step 2: create text hash (to be used for estimating Jaccard similarity)
-            self.text_df['hash'] = self.text_df.apply(
+            # This MinHash step is the heaviest, so show a progress bar.
+            tqdm.pandas(desc='Step 2/9')
+            self.text_df['hash'] = self.text_df.progress_apply(
                 lambda x: self.make_text_hash(x.text, num_perm, ngram_value),
                 axis=1
             )
@@ -336,7 +338,8 @@ class DocumentSimilarity:
                 axis=1)
 
             # Step 5: calculate actual or estimate Jaccard similarity
-            self.text_df['jaccards'] = self.text_df.apply(
+            tqdm.pandas(desc='Step 5/9')
+            self.text_df['jaccards'] = self.text_df.progress_apply(
                 lambda x: self.get_jaccards(
                     df=self.text_df,
                     original=x.text_id,
