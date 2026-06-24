@@ -75,7 +75,7 @@ from nltk import ngrams
 # ipywidgets: tools for interactive browser controls in Jupyter notebooks
 import ipywidgets as widgets
 from ipywidgets import Layout
-from IPython.display import display, clear_output, FileLink, HTML
+from IPython.display import display, clear_output, FileLink, HTML, Javascript
 
 # import other packages
 import hashlib
@@ -100,14 +100,20 @@ def tokenize(text):
 
 class DownloadFileLink(HTML):
     """
-    Create a link that downloads a file directly from the browser.
+    Show a link that downloads a file directly from the browser.
 
-    The file's bytes are embedded in the link as a base64 ``data:`` URI rather
-    than pointing at a file path. A path-based link (the default IPython
-    ``FileLink``) only works when a Jupyter server is serving the working
-    directory; under JupyterLite the notebook is a static site with no server,
-    so a path link resolves to a non-existent URL ("File wasn't available on
-    site"). Embedding the bytes makes the download work in the browser.
+    Under JupyterLite the notebook is a static site with no server, so the
+    default IPython ``FileLink`` (a path-based link) resolves to a non-existent
+    URL ("File wasn't available on site") and fails. Instead we hand the file's
+    bytes to the browser and build a Blob object URL for the link.
+
+    A Blob is used rather than embedding the bytes as a base64 ``data:`` URI in
+    the href because large ``data:`` URI downloads are unreliable/blocked (most
+    notably in Safari), which breaks downloads of bigger outputs such as the
+    zip of saved texts. Blob object URLs handle large files reliably.
+
+    For very large corpora the file can still be downloaded from the JupyterLite
+    file browser (right-click the file in ``output/`` -> Download).
     """
 
     def __init__(self, path, file_name=None, link_text=None, *args, **kwargs):
@@ -116,11 +122,31 @@ class DownloadFileLink(HTML):
 
         with open(path, 'rb') as f:
             payload = base64.b64encode(f.read()).decode('ascii')
-        href = "data:application/octet-stream;base64," + payload
 
-        html = "<a download='{file_name}' href='{href}'>{link_text}</a>".format(
-            file_name=escape(file_name), href=href, link_text=escape(link_text))
-        super().__init__(html)
+        elem_id = 'dl_' + hashlib.md5((path + file_name).encode()).hexdigest()[:12]
+
+        # Decode the base64 payload into a Blob and attach an object URL to the
+        # link. display(Javascript(...)) executes in JupyterLite (an
+        # application/javascript output is not sanitised, unlike a <script> tag
+        # inside HTML output); it polls for the link element to avoid an
+        # ordering race with the HTML rendered just below.
+        display(Javascript("""
+        (function() {
+          var b64 = "%s";
+          function attach(tries) {
+            var a = document.getElementById("%s");
+            if (!a) { if (tries > 0) { setTimeout(function(){ attach(tries - 1); }, 300); } return; }
+            var bin = atob(b64), arr = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) { arr[i] = bin.charCodeAt(i); }
+            a.href = URL.createObjectURL(new Blob([arr], {type: "application/octet-stream"}));
+          }
+          attach(40);
+        })();
+        """ % (payload, elem_id)))
+
+        super().__init__(
+            "<a id='{eid}' download='{fn}' href='#'>{txt}</a>".format(
+                eid=elem_id, fn=escape(file_name), txt=escape(link_text)))
 
 
 class DocumentSimilarity:
