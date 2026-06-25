@@ -10,9 +10,12 @@ This tool has been designed for use with minimal setup from users. You are able 
 ### Lite version (runs in your browser)
 You can also run the tool entirely in your web browser — no login, no server, and your documents never leave your computer. Just click the badge below (the first load takes a minute while it sets up):
 
-The Lite version runs Python in your browser, so it is ideal for smaller corpora.
-
 [![lite-badge](https://jupyterlite.rtfd.io/en/stable/_static/badge.svg)](https://australian-text-analytics-platform.github.io/document-similarity/notebooks/index.html?path=document_similarity.ipynb)
+
+> [!IMPORTANT]
+> **The Lite version is intended for small corpora and for testing.** It runs Python entirely inside your browser tab (via [JupyterLite](https://jupyterlite.readthedocs.io)/Pyodide), which is single-threaded and limited by your browser's memory. Large corpora will be slow and can **crash the browser tab** (as a rough guide, exports beyond a few tens of MB start to push the limit). For anything beyond small datasets, use the **Cloud (Binder) version** below.
+>
+> **Privacy:** because everything runs locally, **your documents never leave your computer** in the Lite version — nothing is uploaded to any server. This makes it a good choice for quickly trying the tool, or for sensitive data, as long as the corpus is small.
 
 ### Cloud version (Binder)
 
