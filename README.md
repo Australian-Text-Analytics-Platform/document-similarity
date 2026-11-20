@@ -1,5 +1,14 @@
 # Document Similarity
 
+> [!WARNING]
+> **This tool is archived and no longer supported or maintained.**
+> It was developed by the Australian Text Analytics Platform (ATAP), the previous phase of the
+> Language Data Commons of Australia (LDaCA). It is preserved as a frozen Docker image so that it
+> keeps launching on BinderHub as it last worked, but it will not be updated or fixed.
+> For current LDaCA text analytics tools, please use
+> [Wordflow](https://australian-text-analytics-platform.github.io/LDaCa_Text_Analytics_Tools/) and
+> [LADAL](https://ladal.edu.au).
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20542430.svg)](https://doi.org/10.5281/zenodo.20542430)
 
 <b>Abstract:</b> in this notebook, you can use the DocumentSimilarity tool to identify similar documents within your corpus. Once you identify those similar documents, you can decide whether to 'keep' or 'remove' them from the corpus. This tool is very useful for cleaning up your corpus and removing any duplicates or similar documents before you continue with your research..  
@@ -19,12 +28,12 @@ You can also run the tool entirely in your web browser — no login, no server, 
 
 ### Cloud version (Binder)
 
-[![Binder](https://binderhub.rc.nectar.org.au/badge_logo.svg)](https://binderhub.rc.nectar.org.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.3.3?labpath=document_similarity.ipynb)    
+[![Binder](https://binderhub.rc.nectar.org.au/badge_logo.svg)](https://binderhub.rc.nectar.org.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/archived?labpath=document_similarity.ipynb)    
 
 <b>Note:</b> Australian Access Federation (AAF) or Reannz Tuakiri (NZ) authentication is required.
 If you do not have access to AAF or NZ, you can use the below link to access the tool (this is a free Binder version, limited to 2GB memory only).
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.3.3?labpath=document_similarity.ipynb)  
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Australian-Text-Analytics-Platform/document-similarity/archived?labpath=document_similarity.ipynb)  
 
 It may take a few minutes for Binder to launch the notebook and install the dependencies for the tool. Please be patient.
 
@@ -69,3 +78,15 @@ The DOI above is the *concept DOI* and always resolves to the latest release. To
 
 ## Previous versions
 [v1.0](https://github.com/Australian-Text-Analytics-Platform/document-similarity/tree/v1.0.0) Notebook [![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/document-similarity/v1.0.0?labpath=document_similarity.ipynb) 
+
+## Run locally with Docker
+
+The frozen environment of this tool is published as the Docker image
+[`milysun/atap-document-similarity`](https://hub.docker.com/r/milysun/atap-document-similarity). With [Docker](https://docs.docker.com/get-docker/) installed, run:
+
+```bash
+docker run --rm -p 8888:8888 milysun/atap-document-similarity:7e07228d14b3 jupyter lab --ip=0.0.0.0 --port=8888
+```
+
+then open the `http://127.0.0.1:8888/lab?token=...` link printed in the terminal.
+On Apple Silicon Macs add `--platform linux/amd64` after `docker run`.
