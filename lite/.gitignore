@@ -1,0 +1,4 @@
+# JupyterLite build artefacts
+_output/
+.jupyterlite.doit.db
+.venv/

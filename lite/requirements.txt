@@ -1,0 +1,17 @@
+# Build-time tooling for the JupyterLite (WASM) site, pinned to the versions of
+# the published build (Pyodide 0.27.1) so a rebuild reproduces it.
+# These are NOT the packages the tool uses at runtime — those (datasketch,
+# nltk, bokeh, seaborn, ...) are installed inside the browser by the first
+# notebook cell via piplite. These two packages only build the static site.
+jupyterlite-core==0.5.1
+jupyterlite-pyodide-kernel==0.5.2
+# Required by jupyterlite-core to index uploaded notebooks/files into the
+# contents API (api/contents/all.json). Without it the site builds but the
+# notebook returns a 404 when opened.
+jupyter-server>=2.0,<3
+# Frontend extension that renders ipywidgets in the browser. Installing it in
+# the build env federates the widget JS into the static site; the Python
+# `ipywidgets` package is installed kernel-side by the notebook's first cell.
+jupyterlab-widgets==3.0.15
+# Lets the build load UI translations (otherwise a harmless warning).
+jupyterlab-server>=2.0,<3
