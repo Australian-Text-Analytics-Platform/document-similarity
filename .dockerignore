@@ -1,0 +1,3 @@
+# Keep the JupyterLite (in-browser) build sources out of the Binder/Docker image,
+# so they do not show up in the corpus loader of the server version.
+lite/
