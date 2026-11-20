@@ -1,0 +1,5 @@
+{
+  "notebooks": [
+    {"path": "document_similarity.ipynb", "must_pass_cells": 2, "timeout": 900}
+  ]
+}
